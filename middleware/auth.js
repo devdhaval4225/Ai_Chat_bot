@@ -1,0 +1,23 @@
+const redis = require('../db/redis');
+
+exports.middAuth = async function (req, res, next) {
+  const requestId = req.headers['x-request-id'];
+
+  if (!requestId) {
+    return res.status(400).json({ error: 'Missing X-Request-Id header' });
+  }
+
+  try {
+    // Check if the requestId already exists
+    const exists = await redis.get(`${requestId}`);
+    if (!exists) {
+      return res.status(409).json({ message: 'Unable to find the requested resource!' });
+    } else {
+        await redis.del(`${requestId}`);
+        next();
+    }
+  } catch (err) {
+    console.error('Redis error:', err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
