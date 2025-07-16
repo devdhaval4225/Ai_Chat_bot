@@ -16,9 +16,11 @@ const {middAuth} = require("./middleware/auth")
 app.use(middAuth)
 
 const userRoutes = require("./routes/user.routes")
-const thirdPartyProvvidor = require("./routes/thirdParty.routes");
+const thirdPartyProvidor = require("./routes/thirdParty.routes");
+const subscription = require("./routes/subscription.routes");
 app.use("/api/user", userRoutes)
-app.use("/api/thirdparty", thirdPartyProvvidor)
+app.use("/api/thirdparty", thirdPartyProvidor)
+app.use("/api/plan", subscription)
 
 app.use(function (req, res, next) {
 	res.status(404).send("Unable to find the requested resource!");
