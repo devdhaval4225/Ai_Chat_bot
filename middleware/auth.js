@@ -1,4 +1,4 @@
-const redis = require('../db/redis');
+// const redis = require('../db/redis');
 
 exports.middAuth = async function (req, res, next) {
   const requestId = req.headers['x-request-id'];
@@ -9,13 +9,23 @@ exports.middAuth = async function (req, res, next) {
 
   try {
     // Check if the requestId already exists
-    const exists = await redis.get(`${requestId}`);
-    if (!exists) {
-      return res.status(409).json({ message: 'Unable to find the requested resource!' });
+    const deviceId = req.body.deviceId
+    if (req.body && !deviceId) {
+    return res.status(409).json({ error: 'Missing Device Id' });
+  } else {
+    if(requestId === deviceId) {
+      next();
     } else {
-        await redis.del(`${requestId}`);
-        next();
+      return res.status(409).json({ message: 'Unable to find the requested resource!' });
     }
+  }
+    // const exists = await redis.get(`${requestId}`);
+    // if (!exists) {
+    //   return res.status(409).json({ message: 'Unable to find the requested resource!' });
+    // } else {
+    //     await redis.del(`${requestId}`);
+    //     next();
+    // }
   } catch (err) {
     console.error('Redis error:', err);
     return res.status(500).json({ error: 'Internal server error' });

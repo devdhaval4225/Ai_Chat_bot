@@ -13,6 +13,11 @@ module.exports = {
         allowNull: false,
         type: Sequelize.STRING
       },
+      uniqueId: {
+          type: Sequelize.STRING,
+          allowNull:false,
+          unique: true
+      },
       totalToken: {
         allowNull: true,
         type: Sequelize.INTEGER

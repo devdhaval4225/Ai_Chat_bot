@@ -122,7 +122,7 @@ exports.provider = async (req, res) => {
             if (apiProvider === "MistralAi") {
                 if (mistralAiApiType === "chatCompletions") {
                     // await reduceToken(deviceId, apiProvider, mistralAiApiType)
-                    let createThread = await axios({
+                    let chatCompletions = await axios({
                         url: 'https://api.mistral.ai/v1/chat/completions',
                         method: 'post',
                         headers: {
@@ -134,10 +134,10 @@ exports.provider = async (req, res) => {
 
                         }
                     });
-                    createThread = createThread.data
+                    chatCompletions = chatCompletions.data
 
                     return res.status(200).json({
-                        data: createThread
+                        data: chatCompletions
                     })
                 }
             }

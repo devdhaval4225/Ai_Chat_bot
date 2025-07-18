@@ -1,6 +1,6 @@
 require("dotenv").config();
 const express = require("express");
-require("./db/redis")
+// require("./db/redis")
 const cors = require("cors")
 const app = express();
 const cookiesParser = require("cookie-parser");

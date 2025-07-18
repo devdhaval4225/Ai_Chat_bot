@@ -10,6 +10,11 @@ const User = sequelize.define('users', {
     allowNull: true,
     type: DataTypes.INTEGER
   },
+  uniqueId: {
+    type: DataTypes.STRING,
+    allowNull:false,
+    unique: true
+  },
   useToken: {
     allowNull: true,
     type: DataTypes.INTEGER

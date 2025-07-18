@@ -8,7 +8,7 @@
     "migrate": "npx sequelize-cli db:migrate",
     "migrateCreate": "npx sequelize-cli migration:generate --name plan_table",
     "migrateStatus": "npx sequelize-cli db:migrate:status",
-    "seedCreate":"npx sequelize-cli seed:generate --name planInsert",
+    "seedCreate": "npx sequelize-cli seed:generate --name planInsert",
     "seeder": "npx sequelize-cli db:seed:all"
   },
   "keywords": [],
