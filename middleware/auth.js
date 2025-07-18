@@ -19,13 +19,6 @@ exports.middAuth = async function (req, res, next) {
       return res.status(409).json({ message: 'Unable to find the requested resource!' });
     }
   }
-    // const exists = await redis.get(`${requestId}`);
-    // if (!exists) {
-    //   return res.status(409).json({ message: 'Unable to find the requested resource!' });
-    // } else {
-    //     await redis.del(`${requestId}`);
-    //     next();
-    // }
   } catch (err) {
     console.error('Redis error:', err);
     return res.status(500).json({ error: 'Internal server error' });
