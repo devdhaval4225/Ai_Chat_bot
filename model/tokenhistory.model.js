@@ -31,6 +31,10 @@ const History = sequelize.define('history', {
     allowNull: true,
     type: DataTypes.INTEGER
   },
+  metadata: {
+    allowNull: true,
+    type: DataTypes.STRING
+  },
 }, {
   tableName: 'history' // optional, custom table name
 });

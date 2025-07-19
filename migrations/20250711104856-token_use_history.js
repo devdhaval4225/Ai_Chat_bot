@@ -40,6 +40,10 @@ module.exports = {
         type: Sequelize.INTEGER,
         defaultValue:0
       },
+      metadata: {
+        allowNull: true,
+        type: Sequelize.TEXT
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,

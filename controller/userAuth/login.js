@@ -3,13 +3,15 @@ const User = require("../../model/user.model");
 
 exports.login = async (req,res) => {
     try {
+            
+        const uniqueId = req.headers.uniqueid
         const { deviceId } = req.body;
 
-        let findUser = await User.findOne({ 
+        let findUser = await User.findOne({
             where: {deviceId: deviceId}
         });
         if(findUser == null) {
-            const createUser = await User.create({ deviceId: deviceId, totalToken:5, reminToken:5, planType:"free" });
+            const createUser = await User.create({ deviceId: deviceId, uniqueId:uniqueId, totalToken:5, reminToken:5, planType:"free" });
             findUser = await User.findOne({ 
                 where: {deviceId: deviceId}
             });
@@ -23,9 +25,9 @@ exports.login = async (req,res) => {
             })
         }        
     } catch (error) {
-        console.log("User Check Error",error);
+        console.log("Error",error.message);
         res.status(500).json({
-            message: "SOMETHING WENT WRONG",
+            message: "Something went wrong",
             status: 500
         })
     }
