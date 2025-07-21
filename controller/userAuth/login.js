@@ -25,7 +25,7 @@ exports.login = async (req,res) => {
             })
         }        
     } catch (error) {
-        console.log("Error",error.message);
+        console.log("Error",error);
         res.status(500).json({
             message: "Something went wrong",
             status: 500

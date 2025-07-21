@@ -1,15 +1,13 @@
-const { decrypt } = require("../helper/common");
+const { decrypt,encrypt } = require("../helper/common");
 
 exports.middAuth = async function (req, res, next) {
   const header = req.headers
   let requestId = header['x-request-id'];
   let uniqueId = header['uniqueid'];
-  console.log("-requestId--1",requestId,uniqueId)
 
   if (requestId && requestId.length > 0 && uniqueId && uniqueId.length > 0) {
-    console.log("-requestId--1",requestId)
-    requestId = await decrypt(requestId)
-    console.log("-requestId--",requestId)
+    const newReq = await encrypt(requestId)
+    requestId = await decrypt(newReq)
   } else {
     return res.status(400).json({ error: 'Missing header' });
   }
