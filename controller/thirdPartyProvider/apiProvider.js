@@ -8,8 +8,8 @@ exports.provider = async (req, res) => {
         const body = req.body
         const { apiProvider } = body
 
-        const notUseToken = await checkToken(deviceId)
-        const reminToken = notUseToken.reminToken
+        const notusedToken = await checkToken(deviceId)
+        const reminToken = notusedToken.reminToken
         if (reminToken == 0) {
             res.status(400).json({
                 message: "Your Quota is Over"
@@ -35,7 +35,7 @@ exports.provider = async (req, res) => {
                     })
                 }
                 if (openAiApiType === "threadSendMessages") {
-                    if(body && body.openAi && threadId){
+                    if(body && body.openAi && threadId && messages){
                         let createThread = await axios({
                             url: `https://api.openai.com/v1/https://api.openai.com/v1/threads/${threadId}/messages`,
                             method: 'post',
@@ -43,7 +43,8 @@ exports.provider = async (req, res) => {
                                 Authorization: `Bearer ${process.env.OPEN_AI_API_KEY}`,
                                 'OpenAI-Beta': 'assistants=v2',
                                 'Content-Type': 'application/json'
-                            }
+                            },
+                            body: messages
                         });
                         createThread = createThread.data
 

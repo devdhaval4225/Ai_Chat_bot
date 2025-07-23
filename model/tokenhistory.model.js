@@ -23,7 +23,7 @@ const History = sequelize.define('history', {
     allowNull: true,
     type: DataTypes.INTEGER
   },
-  useToken: {
+  usedToken: {
     allowNull: true,
     type: DataTypes.INTEGER
   },

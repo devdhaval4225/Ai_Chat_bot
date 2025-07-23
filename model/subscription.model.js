@@ -6,7 +6,7 @@ const SubscriptionHistory = sequelize.define('subscription_history', {
       allowNull: false,
       type: DataTypes.STRING
     },
-    currentPlan: {
+    currentPlanId: {
       allowNull: false,
       type: DataTypes.STRING
     },
@@ -14,20 +14,24 @@ const SubscriptionHistory = sequelize.define('subscription_history', {
       allowNull: false,
       type: DataTypes.INTEGER
     },
-    newToken: {
+    newPlanId: {
+      allowNull: false,
+      type: DataTypes.STRING
+    },
+    newPlanToken: {
       allowNull: false,
       type: DataTypes.INTEGER
     },
     isUpDown: {
       allowNull: false,
-      type: DataTypes.STRING
+      type: DataTypes.ENUM('up', 'down')
     },
-    plusMinusToken: {
+    newRefreshToken: {
       allowNull: false,
       type: DataTypes.INTEGER
     },
 }, {
-  tableName: 'subscription_history' // optional, custom table name
+  tableName: 'subscription_history'
 });
 
 module.exports = SubscriptionHistory;

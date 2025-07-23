@@ -22,7 +22,7 @@ module.exports = {
         allowNull: true,
         type: Sequelize.INTEGER
       },
-      useToken: {
+      usedToken: {
         allowNull: true,
         type: Sequelize.INTEGER,
         defaultValue: 0

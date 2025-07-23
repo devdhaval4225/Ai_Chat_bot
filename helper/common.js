@@ -13,7 +13,7 @@ exports.reduceToken = async (deviceId, uniqueId, apiProvider, apiUseType) => {
             const newTokenData = await User.update(
                 {
                     reminToken: Sequelize.literal('reminToken - 1'),
-                    useToken: Sequelize.literal('useToken + 1'),
+                    usedToken: Sequelize.literal('usedToken + 1'),
                     uniqueId:uniqueId
                 },
                 {
@@ -30,7 +30,7 @@ exports.reduceToken = async (deviceId, uniqueId, apiProvider, apiUseType) => {
                 apiProvider: apiProvider,
                 apiUseType:apiUseType,
                 totalToken:findTestToken.totalToken,
-                useToken:findTestToken.useToken,
+                usedToken:findTestToken.usedToken,
                 reminToken:findTestToken.reminToken
             })
         }

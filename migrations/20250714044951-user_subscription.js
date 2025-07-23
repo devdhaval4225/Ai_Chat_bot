@@ -13,7 +13,7 @@ module.exports = {
         allowNull: false,
         type: Sequelize.STRING
       },
-      currentPlan: {
+      currentPlanId: {
         allowNull: false,
         type: Sequelize.STRING
       },
@@ -21,15 +21,19 @@ module.exports = {
         allowNull: false,
         type: Sequelize.INTEGER
       },
-      newToken: {
+      newPlanId: {
+        allowNull: false,
+        type: Sequelize.STRING
+      },
+      newPlanToken: {
         allowNull: false,
         type: Sequelize.INTEGER
       },
       isUpDown: {
         allowNull: false,
-        type: Sequelize.STRING
+        type: Sequelize.ENUM('up', 'down')
       },
-      plusMinusToken: {
+      newRefreshToken: {
         allowNull: false,
         type: Sequelize.INTEGER
       },

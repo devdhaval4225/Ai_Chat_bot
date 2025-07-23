@@ -15,7 +15,7 @@ const User = sequelize.define('users', {
     allowNull:false,
     unique: true
   },
-  useToken: {
+  usedToken: {
     allowNull: true,
     type: DataTypes.INTEGER
   },
