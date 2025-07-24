@@ -17,11 +17,11 @@ exports.middAuth = async function (req, res, next) {
     if (!deviceId) {
     return res.status(409).json({ error: 'Missing Device Id' });
   } else {
-    // if(requestId === deviceId) {
+    if(requestId === deviceId) {
       next();
-    // } else {
-    //   return res.status(409).json({ message: 'Unable to find the requested resource!' });
-    // }
+    } else {
+      return res.status(409).json({ message: 'Unable to find the requested resource!' });
+    }
   }
   } catch (err) {
     console.log(err);
