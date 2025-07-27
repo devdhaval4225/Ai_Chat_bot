@@ -1,4 +1,4 @@
-require("dotenv").config({debug: true});
+require("dotenv").config();
 const express = require("express");
 // require("./db/redis")
 const cors = require("cors")

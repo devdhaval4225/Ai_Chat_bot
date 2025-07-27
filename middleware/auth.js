@@ -9,6 +9,7 @@ exports.middAuth = async function (req, res, next) {
   if (requestId && requestId.length > 0 && uniqueId && uniqueId.length > 0) {
     // newReq this variable for testing local
     const newReq = await encrypt(requestId)
+    console.log("--newReq---",typeof newReq,newReq)
     requestId = await decrypt(newReq)
   } else {
     res.status(400).json({ error: 'Missing header' });
@@ -20,14 +21,7 @@ exports.middAuth = async function (req, res, next) {
     res.status(400).json({ error: 'Missing Device Id' });
   } else {
     if(requestId === deviceId) {
-      let findUser = await User.findOne({
-        where: { deviceId: deviceId },
-      });
-      if(findUser == null){
-        res.status(501).json({ error: 'Unauthorized' });
-      } else {
-        next();
-      }
+      next();
     } else {
       res.status(409).json({ message: 'Unable to find the requested resource!' });
     }
