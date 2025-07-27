@@ -4,7 +4,7 @@ const { provider } = require("../controller/thirdPartyProvider/apiProvider");
 const { aiBot } = require("../controller/thirdPartyProvider/openAiBot");
 
 
-router.post('/provider/:deviceId',provider);
-router.post('/aibot/:deviceId',aiBot);
+router.post('/provider',provider);
+router.post('/aibot',aiBot);
 
 module.exports = router;

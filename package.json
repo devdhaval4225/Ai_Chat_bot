@@ -9,7 +9,7 @@
     "migrateCreate": "npx sequelize-cli migration:generate --name plan_table",
     "migrateStatus": "npx sequelize-cli db:migrate:status",
     "seedCreate": "npx sequelize-cli seed:generate --name planInsert",
-    "seeder": "npx sequelize-cli db:seed:all"
+    "seed": "npx sequelize-cli db:seed:all"
   },
   "keywords": [],
   "author": "",
@@ -26,7 +26,8 @@
     "ioredis": "^5.6.1",
     "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.14.1",
-    "sequelize": "^6.37.7"
+    "sequelize": "^6.37.7",
+    "shortid": "^2.2.17"
   },
   "devDependencies": {
     "sequelize-cli": "^6.6.3"

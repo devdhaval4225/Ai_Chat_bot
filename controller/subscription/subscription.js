@@ -2,104 +2,142 @@ const User = require("../../model/user.model");
 const Plan = require("../../model/plan.model");
 const History = require("../../model/tokenhistory.model");
 const Subscription = require("../../model/subscription.model");
+const { Op, literal } = require('sequelize');
 
 
 exports.planSubscribe = async (req, res) => {
     try {
-        const { deviceId, planId, type } = req.body;
+        const { deviceId, planId, isDown } = req.body;
+        await User.hasOne(Plan, {
+            foreignKey: 'planSlug',
+            sourceKey: 'planType',
+            constraints: false
+        });
         let findUserDetails = await User.findOne({
             where: { deviceId: deviceId },
+            // attributes: ["deviceId","reminToken"],
             include: [
                 {
                     model: Plan,
                     required: true,
-                    attributes: ['planId as currentPlanId']
+                    // attributes: ['planId', 'token'],
+                    on: literal('users.planType = plan.planSlug')
                 }
             ]
         });
         findUserDetails = findUserDetails.toJSON()
 
-        if (planUpgrade === "planUpgrade") {
-            let findPlan = await Plan.findOne({
+        let findPlan
+        if(req.body && req.body.planId){
+            findPlan = await Plan.findOne({
                 where: { planId: planId, isActive: 1 },
             })
             findPlan = findPlan.toJSON()
+        }
 
-            if (findPlan == null) {
-                res.status(400).json({
-                    message: "Plan not found",
-                    status: 400
-                })
+        const planUpdateType = req.body && req.body.isDown ? "planDown" : findUserDetails.plan.token < findPlan.token ? "planUpgrade" : "planDown"
+
+        if (planUpdateType === "planUpgrade") {
+
+            if (planId) {
+                if (findPlan == null) {
+                    res.status(400).json({
+                        message: "Plan not found",
+                        status: 400
+                    })
+                } else {
+                    const userTokenUpgrade = await User.update(
+                        { 
+                            reminToken: findUserDetails.reminToken + findPlan.token,
+                            totalToken: findUserDetails.totalToken + findPlan.token
+                        },
+                        { where: { deviceId: deviceId } },
+                    )
+
+                    // Create Subscription History
+                    await Subscription.create({
+                        deviceId: deviceId,
+                        currentPlanId: findUserDetails.plan.planId,
+                        currentToken: findUserDetails.reminToken,
+                        newPlanId: findPlan.planId,
+                        newPlanToken: findPlan.token,
+                        isUpDown: "up",
+                        newRefreshToken: findUserDetails.reminToken + findPlan.token
+                    })
+
+                    // Create History 
+                    await History.create({
+                        apiProvider: "planUpgrade",
+                        deviceId: deviceId,
+                        totalToken: findUserDetails.totalToken + findPlan.token,
+                        usedToken: findUserDetails.usedToken,
+                        reminToken: findUserDetails.reminToken + findPlan.token,
+                        metadata: "planUpgrade"
+                    })
+                    res.status(200).json({
+                        message: "Plan is Upgrade"
+                    })
+                }
             } else {
-                const userTokenUpgrade = await User.update(
-                    { reminToken: findUserDetails + findPlan.token },
-                    { where: { deviceId: deviceId } },
-                )
-
-                // Create Subscription History
-                await Subscription.create({
-                    deviceId: deviceId,
-                    currentPlanId: findUserDetails.currentPlanId,
-                    currentToken: findUserDetails.reminToken,
-                    newPlanId: findPlan.planId,
-                    newPlanToken: findPlan.token,
-                    isUpDown: "up",
-                    newRefreshToken: findUserDetails.reminToken + findPlan.token
+                res.status(400).json({
+                    message: "Plan is missing"
                 })
+            }
 
-                // Create History 
-                await History.create({
-                    deviceId: deviceId,
-                    totalToken: findUserDetails.totalToken + findPlan.token,
-                    usedToken: findUserDetails.usedToken,
-                    reminToken: findTestToken.reminToken,
-                    metadata: "planUpgrade"
+
+        }
+
+        if (planUpdateType === "planDown") {
+            if (isDown == 1) {
+                let findCurrentPlan = await Plan.findOne({
+                    where: { planSlug: findUserDetails.planType },
+                })
+                findCurrentPlan = findCurrentPlan.toJSON()
+
+                if (findCurrentPlan == null) {
+                    res.status(400).json({
+                        message: "Plan not found",
+                        status: 400
+                    })
+                } else {
+                    const avalableToken = findCurrentPlan.token < findUserDetails.reminToken ? findCurrentPlan.token : 0
+
+                    const userTokenUpgrade = await User.update(
+                        { reminToken: avalableToken },
+                        { where: { deviceId: deviceId } },
+                    );
+
+                    // Create Subscription History
+                    await Subscription.create({
+                        deviceId: deviceId,
+                        currentPlanId: findCurrentPlan.planId,
+                        currentToken: findUserDetails.reminToken,
+                        newPlanId: 'free-zN8u2k5FC',
+                        newPlanToken: 5,
+                        isUpDown: "down",
+                        newRefreshToken: avalableToken
+                    })
+
+                    // Create History 
+                    await History.create({
+                        apiProvider: "planDown",
+                        deviceId: deviceId,
+                        totalToken: findUserDetails.totalToken,
+                        usedToken: findUserDetails.usedToken,
+                        reminToken: avalableToken,
+                        metadata: "planDown"
+                    })
+                    res.status(400).json({
+                        message: "Plan is Downgrade"
+                    })
+
+                }
+            } else {
+                res.status(400).json({
+                    message: "Plan is not Downgrade"
                 })
             }
         }
-
-        if (planUpgrade === "planDown") {
-            let findCurrentPlan = await Plan.findOne({
-                where: { planSlug: findUserDetails.planType},
-            })
-            findCurrentPlan = findCurrentPlan.toJSON()
-
-            if(findPlan == null){
-                res.status(400).json({
-                    message: "Plan not found",
-                    status: 400
-                })
-            } else {
-                const avalableToken = findUserDetails.reminToken > findCurrentPlan.token ? findCurrentPlan.token : 0
-
-                const userTokenUpgrade = await User.update(
-                    { reminToken: avalableToken },
-                    { where: { deviceId: deviceId } },
-                );
-
-                // Create Subscription History
-                await Subscription.create({
-                    deviceId: deviceId,
-                    currentPlanId: findCurrentPlan.planId,
-                    currentToken: findUserDetails.reminToken,
-                    newPlanId: null,
-                    newPlanToken: null,
-                    isUpDown: "down",
-                    newRefreshToken: avalableToken
-                })
-
-                // Create History 
-                await History.create({
-                    deviceId: deviceId,
-                    totalToken: findUserDetails.totalToken,
-                    usedToken: findUserDetails.usedToken,
-                    reminToken: avalableToken,
-                    metadata: "planDown"
-                })
-                
-            }
-        }
-
     } catch (error) {
         console.log("Error", error);
         res.status(500).json({
