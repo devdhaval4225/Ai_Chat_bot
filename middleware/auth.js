@@ -9,7 +9,7 @@ exports.middAuth = async function (req, res, next) {
   if (requestId && requestId.length > 0) {
     // newReq this variable for testing local
     const newReq = await encrypt(requestId)
-    requestId = process.env.NODE_ENV === "production" ? await decrypt(requestId) : await decrypt(newReq)
+    requestId = await decrypt(requestId)
   } else {
     res.status(400).json({ error: 'Missing header' });
   }
