@@ -1,5 +1,6 @@
 const axios = require("axios");
 const { checkToken, reduceToken } = require("../../helper/common");
+const User = require("../../model/user.model");
 
 exports.provider = async (req, res) => {
     try {
@@ -20,7 +21,6 @@ exports.provider = async (req, res) => {
                 let getMetadata = notusedToken.metadata != null ? JSON.parse(notusedToken.metadata) : {}
                 const getThredId = (getMetadata && getMetadata.openAi && getMetadata.openAi.threadId) === threadId ? false : true
                 if (openAiApiType === "createThread") {
-                    await reduceToken(deviceId, uniqueId, apiProvider, openAiApiType)
                     try {
                         let createThread = await axios({
                             url: 'https://api.openai.com/v1/threads',
@@ -34,6 +34,7 @@ exports.provider = async (req, res) => {
                         createThread = createThread.data
 
                         getMetadata["openAi"] = createThread.id
+                        await reduceToken(deviceId, uniqueId, apiProvider, openAiApiType)
                         await User.update(
                             { metadata: JSON.stringify(getMetadata) },
                             { where: { deviceId: deviceId } }
@@ -43,6 +44,7 @@ exports.provider = async (req, res) => {
                             data: createThread
                         })
                     } catch (error) {
+                        console.log("--error--",error)
                         res.status(400).json({
                             message: "Openai Create Thread Erorr"
                         })
