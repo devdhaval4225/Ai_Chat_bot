@@ -6,7 +6,7 @@ exports.middAuth = async function (req, res, next) {
   let requestId = header['x-request-id'];
   let uniqueId = header['uniqueid'];
 
-  if (requestId && requestId.length > 0 && uniqueId && uniqueId.length > 0) {
+  if (requestId && requestId.length > 0) {
     // newReq this variable for testing local
     const newReq = await encrypt(requestId)
     requestId = process.env.NODE_ENV === "production" ? await decrypt(requestId) : await decrypt(newReq)
