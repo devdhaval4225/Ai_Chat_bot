@@ -14,9 +14,9 @@ module.exports = {
         type: Sequelize.STRING
       },
       uniqueId: {
-          type: Sequelize.STRING,
-          allowNull:false,
-          unique: true
+        type: Sequelize.STRING,
+        allowNull: false,
+        unique: true
       },
       totalToken: {
         allowNull: true,
@@ -30,7 +30,7 @@ module.exports = {
       reminToken: {
         allowNull: true,
         type: Sequelize.INTEGER,
-        defaultValue:0
+        defaultValue: 0
       },
       planType: {
         allowNull: true,
@@ -41,6 +41,10 @@ module.exports = {
         type: Sequelize.STRING
       },
       expireDate: {
+        allowNull: true,
+        type: Sequelize.STRING
+      },
+      metadata: {
         allowNull: true,
         type: Sequelize.STRING
       },

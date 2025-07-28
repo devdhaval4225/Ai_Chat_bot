@@ -12,7 +12,7 @@ const User = sequelize.define('users', {
   },
   uniqueId: {
     type: DataTypes.STRING,
-    allowNull:false,
+    allowNull: false,
     unique: true
   },
   usedToken: {
@@ -34,6 +34,10 @@ const User = sequelize.define('users', {
   expireDate: {
     allowNull: true,
     type: DataTypes.DATE
+  },
+  metadata: {
+    allowNull: true,
+    type: DataTypes.STRING
   }
 }, {
   tableName: 'users' // optional, custom table name

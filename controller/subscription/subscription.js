@@ -3,6 +3,7 @@ const Plan = require("../../model/plan.model");
 const History = require("../../model/tokenhistory.model");
 const Subscription = require("../../model/subscription.model");
 const { Op, literal } = require('sequelize');
+const moment = require("moment");
 
 
 exports.planSubscribe = async (req, res) => {
@@ -28,7 +29,7 @@ exports.planSubscribe = async (req, res) => {
         findUserDetails = findUserDetails.toJSON()
 
         let findPlan
-        if(req.body && req.body.planId){
+        if (req.body && req.body.planId) {
             findPlan = await Plan.findOne({
                 where: { planId: planId, isActive: 1 },
             })
@@ -46,45 +47,56 @@ exports.planSubscribe = async (req, res) => {
                         status: 400
                     })
                 } else {
-                    const userTokenUpgrade = await User.update(
-                        { 
+                    const currentDate = moment();
+                    const expireDate = moment(findUserDetails.expireDate);
+                    const checkDate = expireDate.isAfter(currentDate)
+
+                    if (findUserDetails.reminToken == 0 || !checkDate) {
+                        const addDate = currentDate.add(1,findPlan.type)
+                        const userTokenUpgrade = await User.update(
+                            {
+                                reminToken: findUserDetails.reminToken + findPlan.token,
+                                totalToken: findUserDetails.totalToken + findPlan.token,
+                                isSubscribe:1,
+                                expireDate:addDate
+                            },
+                            { where: { deviceId: deviceId } },
+                        )
+
+                        // Create Subscription History
+                        await Subscription.create({
+                            deviceId: deviceId,
+                            currentPlanId: findUserDetails.plan.planId,
+                            currentToken: findUserDetails.reminToken,
+                            newPlanId: findPlan.planId,
+                            newPlanToken: findPlan.token,
+                            isUpDown: "up",
+                            newRefreshToken: findUserDetails.reminToken + findPlan.token
+                        })
+
+                        // Create History 
+                        await History.create({
+                            apiProvider: "planUpgrade",
+                            deviceId: deviceId,
+                            totalToken: findUserDetails.totalToken + findPlan.token,
+                            usedToken: findUserDetails.usedToken,
                             reminToken: findUserDetails.reminToken + findPlan.token,
-                            totalToken: findUserDetails.totalToken + findPlan.token
-                        },
-                        { where: { deviceId: deviceId } },
-                    )
-
-                    // Create Subscription History
-                    await Subscription.create({
-                        deviceId: deviceId,
-                        currentPlanId: findUserDetails.plan.planId,
-                        currentToken: findUserDetails.reminToken,
-                        newPlanId: findPlan.planId,
-                        newPlanToken: findPlan.token,
-                        isUpDown: "up",
-                        newRefreshToken: findUserDetails.reminToken + findPlan.token
-                    })
-
-                    // Create History 
-                    await History.create({
-                        apiProvider: "planUpgrade",
-                        deviceId: deviceId,
-                        totalToken: findUserDetails.totalToken + findPlan.token,
-                        usedToken: findUserDetails.usedToken,
-                        reminToken: findUserDetails.reminToken + findPlan.token,
-                        metadata: "planUpgrade"
-                    })
-                    res.status(200).json({
-                        message: "Plan is Upgrade"
-                    })
+                            metadata: "planUpgrade"
+                        })
+                        res.status(200).json({
+                            message: "Plan is Upgrade"
+                        })
+                    } else {
+                        res.status(400).json({
+                            message: "Current Plan is Runing"
+                        })
+                    }
                 }
             } else {
                 res.status(400).json({
                     message: "Plan is missing"
                 })
             }
-
-
         }
 
         if (planUpdateType === "planDown") {
@@ -103,7 +115,7 @@ exports.planSubscribe = async (req, res) => {
                     const avalableToken = findCurrentPlan.token < findUserDetails.reminToken ? findCurrentPlan.token : 0
 
                     const userTokenUpgrade = await User.update(
-                        { reminToken: avalableToken },
+                        { reminToken: avalableToken,isSubscribe:0 },
                         { where: { deviceId: deviceId } },
                     );
 

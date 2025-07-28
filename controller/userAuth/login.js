@@ -1,17 +1,17 @@
 const User = require("../../model/user.model");
+const shortid = require('shortid');
 
 
 exports.login = async (req,res) => {
     try {
             
-        const uniqueId = req.headers.uniqueid
         const { deviceId } = req.body;
 
         let findUser = await User.findOne({
             where: {deviceId: deviceId}
         });
         if(findUser == null) {
-            const createUser = await User.create({ deviceId: deviceId, uniqueId:uniqueId, totalToken:5, reminToken:5, planType:"free" });
+            const createUser = await User.create({ deviceId: deviceId, uniqueId:`${shortid.generate()}`, totalToken:5, reminToken:5, planType:"free" });
             findUser = await User.findOne({ 
                 where: {deviceId: deviceId}
             });

@@ -11,7 +11,7 @@ module.exports = {
         planSlug: "free",
         token: 5,
         isActive:1,
-        type: "personal"
+        type: "free-forever"
       },
       {
         planId: `week-${shortid.generate()}`,
@@ -19,7 +19,7 @@ module.exports = {
         planSlug: "week",
         token: 10,
         isActive:1,
-        type: "personal"
+        type: "week"
       },
       {
         planId: `month-${shortid.generate()}`,
@@ -27,7 +27,7 @@ module.exports = {
         planSlug: "month",
         token: 100,
         isActive:1,
-        type: "personal"
+        type: "month"
       },
 
   ]

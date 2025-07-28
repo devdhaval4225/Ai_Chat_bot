@@ -10,10 +10,14 @@ exports.reduceToken = async (deviceId, uniqueId, apiProvider, apiUseType) => {
         if(userUniqueId === uniqueId) {
             return;
         } else {
+            const isSuborNot = (findUser.reminToken - 1) == 0 ? 0 : findUser.isSubscribe
+            const expDate = (findUser.reminToken - 1) == 0 ? null : findUser.expireDate
             const newTokenData = await User.update(
                 {
                     reminToken: Sequelize.literal('reminToken - 1'),
                     usedToken: Sequelize.literal('usedToken + 1'),
+                    isSubscribe:isSuborNot,
+                    expireDate: expDate,
                     uniqueId:uniqueId
                 },
                 {
