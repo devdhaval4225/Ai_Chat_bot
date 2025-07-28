@@ -11,7 +11,7 @@ exports.login = async (req,res) => {
             where: {deviceId: deviceId}
         });
         if(findUser == null) {
-            const createUser = await User.create({ deviceId: deviceId, uniqueId:`${shortid.generate()}`, totalToken:5, reminToken:5, planType:"free" });
+            const createUser = await User.create({ deviceId: deviceId, uniqueId:`UN${shortid.generate()}`, totalToken:5, reminToken:5, planType:"free" });
             findUser = await User.findOne({ 
                 where: {deviceId: deviceId}
             });
