@@ -3,7 +3,13 @@ const { checkToken, reduceToken } = require("../../helper/common");
 
 exports.aiBot = async (req, res) => {
     try {
-        const { type, threadId, role, content, message } = req.body;
+        const { type, threadId, role, content, message, deviceId } = req.body;
+        const header = req.headers
+        const uniqueId = header['uniqueid'];
+        const userDetails = await checkToken(req.body.deviceId)
+
+        await reduceToken(deviceId, uniqueId, "Bot", type)
+
         if (threadId && role && content) {
             if (type === "summarizerBot") {
                 let runSummari = await axios({
@@ -20,6 +26,7 @@ exports.aiBot = async (req, res) => {
                     }
                 });
                 runSummari = runSummari.data
+                runSummari["userDetails"] = userDetails
 
                 res.status(200).json({
                     data: runSummari
@@ -42,27 +49,10 @@ exports.aiBot = async (req, res) => {
                     }
                 });
                 runSpellChecker = runSpellChecker.data
+                runSpellChecker["userDetails"] = userDetails
 
                 res.status(200).json({
                     data: runSpellChecker
-                })
-            }
-
-            if(type === "pdfSummaryBot"){
-                let pdfSummary = await axios({
-                    url: `https://api.openai.com/v1/threads/${threadId}/messages`,
-                    method: 'post',
-                    headers: {
-                        Authorization: `Bearer ${process.env.OPEN_AI_API_KEY}`,
-                        'OpenAI-Beta': 'assistants=v2',
-                        // 'Content-Type': 'application/json'
-                    },
-                    data: message
-                });
-                pdfSummary = pdfSummary.data
-
-                res.status(200).json({
-                    data: pdfSummary
                 })
             }
 
@@ -74,7 +64,7 @@ exports.aiBot = async (req, res) => {
 
 
     } catch (error) {
-        console.log(error.response.data);
+        console.log(error);
         res.status(500).json({
             message: "Something went wrong",
             status: 500

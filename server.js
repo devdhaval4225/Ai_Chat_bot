@@ -7,13 +7,15 @@ const cookiesParser = require("cookie-parser");
 
 const port = process.env.PORT || 8000;
 
-app.use(express.urlencoded({extended: false}));
+app.use(cors());
 app.use(cookiesParser());
 app.use(express.json());
-app.use(cors());
+app.use(express.urlencoded({extended: true}));
 
-const {middAuth} = require("./middleware/auth")
-app.use(middAuth)
+// const {middAuth} = require("./middleware/auth");
+// app.use(middAuth)
+const {apiLogger} = require("./middleware/apiLogs");
+app.use(apiLogger)
 
 const userRoutes = require("./routes/user.routes")
 const thirdPartyProvidor = require("./routes/thirdParty.routes");

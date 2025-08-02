@@ -1,4 +1,4 @@
-const { decrypt,encrypt } = require("../helper/common");
+const { decrypt, encrypt } = require("../helper/common");
 const User = require("../model/user.model");
 
 exports.middAuth = async function (req, res, next) {
@@ -17,14 +17,21 @@ exports.middAuth = async function (req, res, next) {
   try {
     const deviceId = req.body.deviceId
     if (!deviceId) {
-    res.status(400).json({ error: 'Missing Device Id' });
-  } else {
-    if(requestId === deviceId) {
-      next();
+      res.status(400).json({ error: 'Missing Device Id' });
     } else {
-      res.status(409).json({ message: 'Unable to find the requested resource!' });
+      if (requestId === deviceId) {
+        if (!["login"].includes(req.originalUrl)) {
+          const findUser = await User.findOne({
+            where: { deviceId: deviceId },
+          });
+          findUser == null ? res.status(400).json({ message: 'Unauthorized' }) : next()
+        } else {
+          next();
+        }
+      } else {
+        res.status(409).json({ message: 'Unable to find the requested resource!' });
+      }
     }
-  }
   } catch (err) {
     console.log(err);
     res.status(500).json({ error: 'Internal server error' });

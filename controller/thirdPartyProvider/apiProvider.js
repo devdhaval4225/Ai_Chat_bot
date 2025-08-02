@@ -32,6 +32,7 @@ exports.provider = async (req, res) => {
                             }
                         });
                         createThread = createThread.data
+                        createThread["userDetails"] = notusedToken
 
                         getMetadata["openAi"] = createThread.id
                         await reduceToken(deviceId, uniqueId, apiProvider, openAiApiType)
@@ -44,7 +45,7 @@ exports.provider = async (req, res) => {
                             data: createThread
                         })
                     } catch (error) {
-                        console.log("--error--",error)
+                        console.log("--error--", error)
                         res.status(400).json({
                             message: "Openai Create Thread Erorr"
                         })
@@ -75,6 +76,8 @@ exports.provider = async (req, res) => {
                             });
                             // console.log("--createThreadRun--",createThreadRun.data)
                             createThreadRun = createThreadRun.data
+                            createThreadRun["userDetails"] = notusedToken
+
 
                             res.status(200).json({
                                 data: createThreadRun
@@ -117,6 +120,7 @@ exports.provider = async (req, res) => {
                                 },
                             });
                             getRunStatus = getRunStatus.data
+                            getRunStatus["userDetails"] = notusedToken
 
                             res.status(200).json({
                                 data: getRunStatus
@@ -151,6 +155,7 @@ exports.provider = async (req, res) => {
                                 }
                             });
                             getRunStatus = getRunStatus.data
+                            getRunStatus["userDetails"] = notusedToken
 
                             res.status(200).json({
                                 data: getRunStatus
@@ -158,7 +163,7 @@ exports.provider = async (req, res) => {
                         } catch (error) {
                             console.log("Chat Completion Error", error.response);
                             res.status(400).json({
-                                message: "Chat Completion Error"
+                                message: "Open ai Chat Completion Error"
                             })
                         }
 
@@ -182,22 +187,30 @@ exports.provider = async (req, res) => {
                             method: 'post',
                             headers: {
                                 'Authorization': `Bearer ${process.env.MISTRAL_AI_API_KEY}`,
-                                'Accept': 'application/json',
-                                'Content-Type': 'application/json'
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
                             },
                             data: {
                                 "model": "mistral-large-latest",
-                                messages: messages
+                                "messages": [
+                                    {
+                                        "role": "user",
+                                        "content": "Hello!"
+                                    }
+                                ],
+                                "temperature": 0.7,
+                                "max_tokens": 256
                             }
                         });
                         chatCompletions = chatCompletions.data
+                        chatCompletions["userDetails"] = notusedToken
 
                         res.status(200).json({
                             data: chatCompletions
                         })
                     } catch (error) {
                         res.status(400).json({
-                            message: "Gemini chat completions erorr"
+                            message: "Mistral chat completions erorr",
                         })
                     }
                 }
@@ -209,18 +222,18 @@ exports.provider = async (req, res) => {
                 if (geminiAiApiType === "chatCompletions") {
                     try {
                         let chatCompletions = await axios({
-                            url: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent',
+                            url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
                             method: 'post',
                             headers: {
-                                'Authorization': `Bearer ${process.env.GEMINI_API_KEY}`,
                                 'Accept': 'application/json',
                                 'Content-Type': 'application/json'
                             },
-                            body: {
-                                "contents": contents
+                            data: {
+                                contents: contents
                             }
                         });
                         chatCompletions = chatCompletions.data
+                        chatCompletions["userDetails"] = notusedToken
 
                         res.status(200).json({
                             data: chatCompletions

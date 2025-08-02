@@ -139,7 +139,7 @@ exports.planSubscribe = async (req, res) => {
                         reminToken: avalableToken,
                         metadata: "planDown"
                     })
-                    res.status(400).json({
+                    res.status(200).json({
                         message: "Plan is Downgrade"
                     })
 
