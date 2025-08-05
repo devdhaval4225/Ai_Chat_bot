@@ -33,7 +33,14 @@ exports.planSubscribe = async (req, res) => {
             findPlan = await Plan.findOne({
                 where: { planId: planId, isActive: 1 },
             })
-            findPlan = findPlan.toJSON()
+            if (findPlan == null) {
+                res.status(400).json({
+                    message: "Plan not found",
+                    status: 400
+                })
+            } else {
+                findPlan = findPlan.toJSON()
+            }
         }
 
         const planUpdateType = req.body && req.body.isDown ? "planDown" : findUserDetails.plan.token < findPlan.token ? "planUpgrade" : "planDown"
@@ -52,13 +59,13 @@ exports.planSubscribe = async (req, res) => {
                     const checkDate = expireDate.isAfter(currentDate)
 
                     if (findUserDetails.reminToken == 0 || !checkDate) {
-                        const addDate = currentDate.add(1,findPlan.type)
+                        const addDate = currentDate.add(1, findPlan.type)
                         const userTokenUpgrade = await User.update(
                             {
                                 reminToken: findUserDetails.reminToken + findPlan.token,
                                 totalToken: findUserDetails.totalToken + findPlan.token,
-                                isSubscribe:1,
-                                expireDate:addDate
+                                isSubscribe: 1,
+                                expireDate: addDate
                             },
                             { where: { deviceId: deviceId } },
                         )
@@ -115,7 +122,7 @@ exports.planSubscribe = async (req, res) => {
                     const avalableToken = findCurrentPlan.token < findUserDetails.reminToken ? findCurrentPlan.token : 0
 
                     const userTokenUpgrade = await User.update(
-                        { reminToken: avalableToken,isSubscribe:0 },
+                        { reminToken: avalableToken, isSubscribe: 0 },
                         { where: { deviceId: deviceId } },
                     );
 

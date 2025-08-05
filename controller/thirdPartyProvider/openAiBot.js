@@ -1,5 +1,6 @@
 const axios = require("axios");
 const { checkToken, reduceToken } = require("../../helper/common");
+const { pick } = require("lodash")
 
 exports.aiBot = async (req, res) => {
     try {
@@ -7,6 +8,7 @@ exports.aiBot = async (req, res) => {
         const header = req.headers
         const uniqueId = header['uniqueid'];
         const userDetails = await checkToken(req.body.deviceId)
+        const apiSendUserDetails = pick(userDetails, ['id', 'totalToken', 'usedToken', 'reminToken', 'planType', 'isSubscribe', 'expireDate']);
 
         await reduceToken(deviceId, uniqueId, "Bot", type)
 
@@ -25,8 +27,12 @@ exports.aiBot = async (req, res) => {
                         content: content
                     }
                 });
-                runSummari = runSummari.data
-                runSummari["userDetails"] = userDetails
+
+                const pickRunSummari = pick(runSummari.data, ['id', 'content'])
+                pickRunSummari.content = pickRunSummari.content.map(c => ({ text: pick(c.text, ['value']), type: c.type }));
+                runSummari = pickRunSummari
+
+                runSummari["userDetails"] = apiSendUserDetails
 
                 res.status(200).json({
                     data: runSummari
@@ -48,8 +54,11 @@ exports.aiBot = async (req, res) => {
                         content: content
                     }
                 });
-                runSpellChecker = runSpellChecker.data
-                runSpellChecker["userDetails"] = userDetails
+
+                const pickSpellChecker = pick(runSpellChecker.data, ['id', 'content'])
+                pickSpellChecker.content = pickSpellChecker.content.map(c => ({ text: pick(c.text, ['value']), type: c.type }));
+                runSpellChecker = pickSpellChecker
+                runSpellChecker["userDetails"] = apiSendUserDetails
 
                 res.status(200).json({
                     data: runSpellChecker

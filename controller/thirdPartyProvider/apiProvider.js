@@ -1,6 +1,7 @@
 const axios = require("axios");
 const { checkToken, reduceToken } = require("../../helper/common");
 const User = require("../../model/user.model");
+const { _, pick } = require("lodash")
 
 exports.provider = async (req, res) => {
     try {
@@ -10,6 +11,7 @@ exports.provider = async (req, res) => {
         const { apiProvider, deviceId } = body
 
         const notusedToken = await checkToken(body.deviceId)
+        const apiSendUserDetails = pick(notusedToken, ['id', 'totalToken', 'usedToken', 'reminToken', 'planType', 'isSubscribe', 'expireDate']);
         const reminToken = notusedToken.reminToken
         if (reminToken == 0) {
             res.status(400).json({
@@ -31,8 +33,10 @@ exports.provider = async (req, res) => {
                                 'Content-Type': 'application/json'
                             }
                         });
-                        createThread = createThread.data
-                        createThread["userDetails"] = notusedToken
+                        const pickThredData = pick(createThread.data, 'id')
+                        createThread = pickThredData
+
+                        createThread["userDetails"] = apiSendUserDetails
 
                         getMetadata["openAi"] = createThread.id
                         await reduceToken(deviceId, uniqueId, apiProvider, openAiApiType)
@@ -76,7 +80,7 @@ exports.provider = async (req, res) => {
                             });
                             // console.log("--createThreadRun--",createThreadRun.data)
                             createThreadRun = createThreadRun.data
-                            createThreadRun["userDetails"] = notusedToken
+                            createThreadRun["userDetails"] = apiSendUserDetails
 
 
                             res.status(200).json({
@@ -120,7 +124,7 @@ exports.provider = async (req, res) => {
                                 },
                             });
                             getRunStatus = getRunStatus.data
-                            getRunStatus["userDetails"] = notusedToken
+                            getRunStatus["userDetails"] = apiSendUserDetails
 
                             res.status(200).json({
                                 data: getRunStatus
@@ -154,9 +158,12 @@ exports.provider = async (req, res) => {
                                     messages: messages
                                 }
                             });
-                            getRunStatus = getRunStatus.data
-                            getRunStatus["userDetails"] = notusedToken
 
+                            const pickRunStatusData = pick(getRunStatus.data, ['id', 'created', 'choices'])
+                            pickRunStatusData.choices = pickRunStatusData.choices.map(choice => ({ message: pick(choice.message, ['role', 'content']), index:choice.index }));
+                            getRunStatus = pickRunStatusData
+                            getRunStatus["userDetails"] = apiSendUserDetails
+                            
                             res.status(200).json({
                                 data: getRunStatus
                             })
@@ -203,7 +210,7 @@ exports.provider = async (req, res) => {
                             }
                         });
                         chatCompletions = chatCompletions.data
-                        chatCompletions["userDetails"] = notusedToken
+                        chatCompletions["userDetails"] = apiSendUserDetails
 
                         res.status(200).json({
                             data: chatCompletions
@@ -233,7 +240,7 @@ exports.provider = async (req, res) => {
                             }
                         });
                         chatCompletions = chatCompletions.data
-                        chatCompletions["userDetails"] = notusedToken
+                        chatCompletions["userDetails"] = apiSendUserDetails
 
                         res.status(200).json({
                             data: chatCompletions
@@ -262,7 +269,7 @@ exports.provider = async (req, res) => {
             //                 model: "deepseek-chat", // Try "deepseek-chat" if "deepseek-reasoner" fails
             //                 messages: messages,
             //             });
-            //             sendMessage["userDetails"] = notusedToken
+            //             sendMessage["userDetails"] = apiSendUserDetails
 
             //             res.status(200).json({
             //                 data: sendMessage

@@ -20,7 +20,7 @@ exports.middAuth = async function (req, res, next) {
       res.status(400).json({ error: 'Missing Device Id' });
     } else {
       if (requestId === deviceId) {
-        if (!["login"].includes(req.originalUrl)) {
+        if (!["/api/user/login"].includes(req.originalUrl)) {
           const findUser = await User.findOne({
             where: { deviceId: deviceId },
           });
