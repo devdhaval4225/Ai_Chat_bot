@@ -246,6 +246,35 @@ exports.provider = async (req, res) => {
                     }
                 }
             }
+
+            // if (apiProvider === "Deepseek") {
+            //     const OpenAI = require("openai");
+            //     const openai = new OpenAI({
+            //         apiKey: process.env.DEEPSEEK_API_KEY, // Replace with a valid DeepSeek API key
+            //         baseURL: "https://api.deepseek.com",
+            //     });
+
+            //     const { deepseekAiApiType, messages } = body.deepseek
+            //     await reduceToken(deviceId, uniqueId, apiProvider, deepseekAiApiType)
+            //     if (deepseekAiApiType === "chatCompletions") {
+            //         try {
+            //             const sendMessage = await openai.chat.completions.create({
+            //                 model: "deepseek-chat", // Try "deepseek-chat" if "deepseek-reasoner" fails
+            //                 messages: messages,
+            //             });
+            //             sendMessage["userDetails"] = notusedToken
+
+            //             res.status(200).json({
+            //                 data: sendMessage
+            //             })
+            //         } catch (error) {
+            //             console.log("--error---", error.response.data)
+            //             res.status(400).json({
+            //                 message: "Deepseek chat completion error",
+            //             })
+            //         }
+            //     }
+            // }
         }
     } catch (error) {
         console.log(error);
