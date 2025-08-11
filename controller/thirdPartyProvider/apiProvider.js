@@ -19,9 +19,9 @@ exports.provider = async (req, res) => {
             })
         } else {
             if (apiProvider === "OpenAi") {
-                const { threadId, assistant_id, runId, messages, openAiApiType } = body.openAi
+                const { threadId, assistant_id, runId, messages, openAiApiType } = body.filedObj
                 let getMetadata = notusedToken.metadata != null ? JSON.parse(notusedToken.metadata) : {}
-                const getThredId = (getMetadata && getMetadata.openAi && getMetadata.openAi.threadId) === threadId ? false : true
+                const getThredId = (getMetadata && getMetadata.filedObj && getMetadata.filedObj.threadId) === threadId ? false : true
                 if (openAiApiType === "createThread") {
                     try {
                         let createThread = await axios({
@@ -56,7 +56,7 @@ exports.provider = async (req, res) => {
                     }
                 }
                 if (openAiApiType === "threadRun") {
-                    if (body && body.openAi && threadId && assistant_id) {
+                    if (body && body.filedObj && threadId && assistant_id) {
                         if (getThredId) {
                             await reduceToken(deviceId, uniqueId, apiProvider, openAiApiType)
                             getMetadata["openAi"] = threadId
@@ -102,7 +102,7 @@ exports.provider = async (req, res) => {
                 }
                 if (openAiApiType === "getThreadRunStatus") {
 
-                    if (body && body.openAi && threadId && runId) {
+                    if (body && body.filedObj && threadId && runId) {
 
                         if (getThredId) {
                             await reduceToken(deviceId, uniqueId, apiProvider, openAiApiType)
@@ -144,7 +144,7 @@ exports.provider = async (req, res) => {
                 }
                 if (openAiApiType === "chatCompletion") {
                     await reduceToken(deviceId, uniqueId, apiProvider, openAiApiType)
-                    if (body && body.openAi && messages) {
+                    if (body && body.filedObj && messages) {
                         try {
                             let getRunStatus = await axios({
                                 url: `https://api.openai.com/v1/chat/completions`,
@@ -184,7 +184,7 @@ exports.provider = async (req, res) => {
             }
 
             if (apiProvider === "MistralAi") {
-                const { mistralAiApiType, messages } = body.mistralAi
+                const { mistralAiApiType, messages } = body.filedObj
                 await reduceToken(deviceId, uniqueId, apiProvider, mistralAiApiType)
 
                 if (mistralAiApiType === "chatCompletions") {
@@ -199,12 +199,7 @@ exports.provider = async (req, res) => {
                             },
                             data: {
                                 "model": "mistral-large-latest",
-                                "messages": [
-                                    {
-                                        "role": "user",
-                                        "content": "Hello!"
-                                    }
-                                ],
+                                "messages": messages,
                                 "temperature": 0.7,
                                 "max_tokens": 256
                             }
@@ -224,7 +219,7 @@ exports.provider = async (req, res) => {
             }
 
             if (apiProvider === "Gemini") {
-                const { geminiAiApiType, contents } = body.gemini
+                const { geminiAiApiType, contents } = body.filedObj
                 await reduceToken(deviceId, uniqueId, apiProvider, geminiAiApiType)
                 if (geminiAiApiType === "chatCompletions") {
                     try {
