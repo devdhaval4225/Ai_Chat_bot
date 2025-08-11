@@ -1,125 +1,12 @@
-// const OpenAI = require("openai");
-// const openai = new OpenAI({ apiKey: process.env.OPEN_AI_API_KEY });
-// const path = require('path');
-// const fs = require('fs');
-// const FormData = require('form-data');
-// const axios = require("axios");
-// const { reduceToken } = require("../../helper/common");
-
-
-
-// exports.pdfSummaryBot = async (req, res) => {
-//     try {
-//         const header = req.headers
-//         const uniqueId = header['uniqueid'];
-//         await reduceToken(req.body.deviceId, uniqueId, "Bot", "pdfSummaryBot")
-
-
-//         const fileExtName = path.extname(req.file.originalname).toLowerCase()
-//         if ([".pdf", ".txt"].includes(fileExtName)) {
-//             const message = `Expected file type to be a supported format: .jpeg, .jpg, .png, .gif, .webp but got ${fileExtName}.`;
-//             fs.rm(req.file.path, { recursive: true, force: true }, (err) => {
-//                 if (err) throw err;
-//             });
-//             return res.status(400).json({
-//                 message: message,
-//                 status: 400
-//             })
-
-//         }
-//         const purpose = [".pdf", ".txt"].includes(fileExtName) ? "assistants" : "vision"
-
-//         const form = new FormData();
-//         form.append('file', fs.createReadStream(req.file.path));
-//         form.append('purpose', purpose);
-
-//         let fileUpload = await axios({
-//             url: 'https://api.openai.com/v1/files',
-//             method: 'post',
-//             headers: {
-//                 Authorization: `Bearer ${process.env.OPEN_AI_API_KEY}`,
-//                 'OpenAI-Beta': 'assistants=v2',
-//                 'Content-Type': 'application/json',
-//                 ...form.getHeaders()
-//             },
-//             data: form
-//         });
-//         fileUpload = fileUpload.data
-
-//         fs.rm(req.file.path, { recursive: true, force: true }, (err) => {
-//             if (err) throw err;
-//             console.log('File deleted');
-//         });
-
-//         let createThread = await axios({
-//             url: 'https://api.openai.com/v1/threads',
-//             method: 'post',
-//             headers: {
-//                 Authorization: `Bearer ${process.env.OPEN_AI_API_KEY}`,
-//                 'OpenAI-Beta': 'assistants=v2',
-//                 'Content-Type': 'application/json'
-//             }
-//         });
-//         createThread = createThread.data
-
-
-//         let sendMessageResponse = await axios({
-//             url: `https://api.openai.com/v1/threads/${createThread.id}/messages`,
-//             method: 'post',
-//             headers: {
-//                 'Authorization': `Bearer ${process.env.OPEN_AI_API_KEY}`,
-//                 'OpenAI-Beta': 'assistants=v2',
-//                 'Content-Type': 'application/json'
-//             },
-//             data: {
-//                 role: 'user',
-//                 content: [
-//                     {
-//                         type: 'text',
-//                         text: req.body.text || 'Please summarize this PDF'
-//                     },
-//                     {
-//                         type: 'image_file',
-//                         image_file: {
-//                             file_id: fileUpload.id
-//                         }
-//                     }
-//                 ]
-//             }
-
-//         })
-
-//         sendMessageResponse = sendMessageResponse.data
-
-//         res.status(200).json({
-//             data: sendMessageResponse,
-//             status: 200
-//         })
-
-//     } catch (error) {
-//         console.log(error.response);
-
-//         fs.rm(req.file.path, { recursive: true, force: true }, (err) => {
-//             if (err) throw err;
-//             console.log('File deleted');
-//         });
-
-//         res.status(500).json({
-//             message: "Something went wrong",
-//             status: 500
-//         })
-//     }
-// }
-
-
-const OpenAI = require("openai");
-const openai = new OpenAI({ apiKey: process.env.OPEN_AI_API_KEY });
 const path = require('path');
 const fs = require('fs');
 const FormData = require('form-data');
 const axios = require("axios");
 const { reduceToken } = require("../../helper/common");
 const assistantId = "asst_78BTjDEhrFqOUDZyPkYpBJdO"
+const { _, pick } = require("lodash")
+const { checkToken } = require("../../helper/common");
+const User = require("../..//model/user.model");
 
 
 
@@ -127,15 +14,17 @@ exports.pdfSummaryBot = async (req, res) => {
     try {
         const header = req.headers
         const uniqueId = header['uniqueid'];
-        await reduceToken(req.body.deviceId, uniqueId, "Bot", "pdfSummaryBot")
+        const userData = await checkToken(req.body.deviceId)
+        const getMetadata = userData.metadata != null ? JSON.parse(userData.metadata) : {}
+        const apiSendUserDetails = pick(userData, ['id', 'totalToken', 'usedToken', 'reminToken', 'planType', 'isSubscribe', 'expireDate']);
 
 
         if (req.body.type === "upload") {
             try {
+                await reduceToken(req.body.deviceId, uniqueId, "Bot", "pdfSummaryBot-Upload")
                 // Pdf Upload
                 const fileExtName = path.extname(req.file.originalname).toLowerCase()
                 const mimeType = [".pdf"]
-                // const mimeType = [".c", ".cpp", ".cs", ".css", ".doc", ".docx", ".go", ".html", ".java", ".js", ".json", ".md", ".pdf", ".php", ".pptx", ".py", ".Py", ".rb", ".sh", ".tex", ".ts", ".txt"]
                 if (!mimeType.includes(fileExtName)) {
                     const message = `Please upload only .pdf but got ${fileExtName}.`;
                     res.status(400).json({
@@ -187,30 +76,6 @@ exports.pdfSummaryBot = async (req, res) => {
                 const threadUploadId = createThread.id
 
 
-                // Thread in send Message and find attachments 
-                let sendMessageResponse = await axios({
-                    url: `https://api.openai.com/v1/threads/${threadUploadId}/messages`,
-                    method: 'post',
-                    headers: {
-                        'Authorization': `Bearer ${process.env.OPEN_AI_API_KEY}`,
-                        'OpenAI-Beta': 'assistants=v2',
-                        'Content-Type': 'application/json'
-                    },
-                    data: {
-                        role: 'user',
-                        content: req.body.text,
-                        attachments: [
-                            {
-                                file_id: fileId,
-                                tools: [{ type: 'file_search' }],
-                            },
-                        ],
-                    }
-
-                })
-                sendMessageResponse = sendMessageResponse.data
-
-
                 // Thread Run
                 const runRes = await axios.post(
                     `https://api.openai.com/v1/threads/${threadUploadId}/runs`,
@@ -225,11 +90,16 @@ exports.pdfSummaryBot = async (req, res) => {
                         },
                     }
                 );
-
                 const runUploadId = runRes.data.id;
 
+                getMetadata["pdfObj"] = { threadId: threadUploadId, fileId: fileId }
+                await User.update(
+                    { metadata: JSON.stringify(getMetadata) },
+                    { where: { deviceId: req.body.deviceId } }
+                );
+
                 res.status(200).json({
-                    data: { threadId: threadUploadId, runId: runUploadId },
+                    data: { threadId: threadUploadId, runId: runUploadId, fileId: fileId },
                     status: 200
                 });
 
@@ -260,9 +130,46 @@ exports.pdfSummaryBot = async (req, res) => {
         if (req.body.type === "run") {
             try {
                 const body = req.body
+
+                const checkFileAndThred = (getMetadata && getMetadata.pdfObj && getMetadata.pdfObj) && 
+                    body.threadId === getMetadata.pdfObj.threadId && 
+                    body.fileId === getMetadata.pdfObj.fileId
+
+                if (checkFileAndThred === false) {
+                    getMetadata["pdfObj"] = { threadId: body.threadId, fileId: body.fileId }
+                    await User.update(
+                        { metadata: JSON.stringify(getMetadata) },
+                        { where: { deviceId: body.deviceId } }
+                    );
+                    await reduceToken(body.deviceId, uniqueId, "Bot", "pdfSummaryBot-Run")
+                }
+
+
+                // Thread in send Message and find attachments 
+                let sendMessageResponse = await axios({
+                    url: `https://api.openai.com/v1/threads/${body.threadId}/messages`,
+                    method: 'post',
+                    headers: {
+                        'Authorization': `Bearer ${process.env.OPEN_AI_API_KEY}`,
+                        'OpenAI-Beta': 'assistants=v2',
+                        'Content-Type': 'application/json'
+                    },
+                    data: {
+                        role: 'user',
+                        content: body.text,
+                        attachments: [
+                            {
+                                file_id: body.fileId,
+                                tools: [{ type: 'file_search' }],
+                            },
+                        ],
+                    }
+
+                })
+                sendMessageResponse = sendMessageResponse.data
+
                 // ✅ Poll run status
                 let runStatus = 'queued';
-                console.log("-=-=-=-=runStatus-=-=-",runStatus)
                 while (runStatus !== 'completed') {
                     await new Promise((resolve) => setTimeout(resolve, 1000));
 
@@ -302,7 +209,7 @@ exports.pdfSummaryBot = async (req, res) => {
 
                 // ✅ Get final answer
                 let answerRes = await axios.get(
-                    `https://api.openai.com/v1/threads/${threadId}/messages`,
+                    `https://api.openai.com/v1/threads/${body.threadId}/messages`,
                     {
                         headers: {
                             Authorization: `Bearer ${process.env.OPEN_AI_API_KEY}`,
@@ -311,9 +218,16 @@ exports.pdfSummaryBot = async (req, res) => {
                     }
                 );
                 answerRes = answerRes.data
-
+                const formatted = answerRes.data.map(item => ({
+                    role: item.role,
+                    text: item.content[0]?.text?.value || ""
+                }));
+                const newRes = {
+                    content: formatted,
+                    userDetails: apiSendUserDetails
+                }
                 res.status(200).json({
-                    data: answerRes,
+                    data: newRes,
                     status: 200
                 })
             } catch (error) {

@@ -19,10 +19,10 @@ exports.provider = async (req, res) => {
             })
         } else {
             if (apiProvider === "OpenAi") {
-                const { threadId, assistant_id, runId, messages, openAiApiType } = body.filedObj
+                const { threadId, assistant_id, runId, messages, apiType } = body.filedObj
                 let getMetadata = notusedToken.metadata != null ? JSON.parse(notusedToken.metadata) : {}
                 const getThredId = (getMetadata && getMetadata.filedObj && getMetadata.filedObj.threadId) === threadId ? false : true
-                if (openAiApiType === "createThread") {
+                if (apiType === "createThread") {
                     try {
                         let createThread = await axios({
                             url: 'https://api.openai.com/v1/threads',
@@ -39,7 +39,7 @@ exports.provider = async (req, res) => {
                         createThread["userDetails"] = apiSendUserDetails
 
                         getMetadata["openAi"] = createThread.id
-                        await reduceToken(deviceId, uniqueId, apiProvider, openAiApiType)
+                        await reduceToken(deviceId, uniqueId, apiProvider, apiType)
                         await User.update(
                             { metadata: JSON.stringify(getMetadata) },
                             { where: { deviceId: deviceId } }
@@ -55,10 +55,10 @@ exports.provider = async (req, res) => {
                         })
                     }
                 }
-                if (openAiApiType === "threadRun") {
+                if (apiType === "threadRun") {
                     if (body && body.filedObj && threadId && assistant_id) {
                         if (getThredId) {
-                            await reduceToken(deviceId, uniqueId, apiProvider, openAiApiType)
+                            await reduceToken(deviceId, uniqueId, apiProvider, apiType)
                             getMetadata["openAi"] = threadId
                             await User.update(
                                 { metadata: JSON.stringify(getMetadata) },
@@ -100,12 +100,12 @@ exports.provider = async (req, res) => {
                     }
 
                 }
-                if (openAiApiType === "getThreadRunStatus") {
+                if (apiType === "getThreadRunStatus") {
 
                     if (body && body.filedObj && threadId && runId) {
 
                         if (getThredId) {
-                            await reduceToken(deviceId, uniqueId, apiProvider, openAiApiType)
+                            await reduceToken(deviceId, uniqueId, apiProvider, apiType)
                             getMetadata["openAi"] = threadId
                             await User.update(
                                 { metadata: JSON.stringify(getMetadata) },
@@ -142,8 +142,8 @@ exports.provider = async (req, res) => {
                     }
 
                 }
-                if (openAiApiType === "chatCompletion") {
-                    await reduceToken(deviceId, uniqueId, apiProvider, openAiApiType)
+                if (apiType === "chatCompletion") {
+                    await reduceToken(deviceId, uniqueId, apiProvider, apiType)
                     if (body && body.filedObj && messages) {
                         try {
                             let getRunStatus = await axios({
@@ -160,10 +160,10 @@ exports.provider = async (req, res) => {
                             });
 
                             const pickRunStatusData = pick(getRunStatus.data, ['id', 'created', 'choices'])
-                            pickRunStatusData.choices = pickRunStatusData.choices.map(choice => ({ message: pick(choice.message, ['role', 'content']), index:choice.index }));
+                            pickRunStatusData.choices = pickRunStatusData.choices.map(choice => ({ message: pick(choice.message, ['role', 'content']), index: choice.index }));
                             getRunStatus = pickRunStatusData
                             getRunStatus["userDetails"] = apiSendUserDetails
-                            
+
                             res.status(200).json({
                                 data: getRunStatus
                             })
@@ -184,10 +184,10 @@ exports.provider = async (req, res) => {
             }
 
             if (apiProvider === "MistralAi") {
-                const { mistralAiApiType, messages } = body.filedObj
-                await reduceToken(deviceId, uniqueId, apiProvider, mistralAiApiType)
+                const { apiType, messages } = body.filedObj
+                await reduceToken(deviceId, uniqueId, apiProvider, apiType)
 
-                if (mistralAiApiType === "chatCompletions") {
+                if (apiType === "chatCompletions") {
                     try {
                         let chatCompletions = await axios({
                             url: 'https://api.mistral.ai/v1/chat/completions',
@@ -204,11 +204,13 @@ exports.provider = async (req, res) => {
                                 "max_tokens": 256
                             }
                         });
-                        chatCompletions = chatCompletions.data
-                        chatCompletions["userDetails"] = apiSendUserDetails
+                        const mistralRes = {
+                            content: chatCompletions.data.choices[0]["message"],
+                            userDetails: apiSendUserDetails
+                        }
 
                         res.status(200).json({
-                            data: chatCompletions
+                            data: mistralRes
                         })
                     } catch (error) {
                         res.status(400).json({
@@ -219,9 +221,15 @@ exports.provider = async (req, res) => {
             }
 
             if (apiProvider === "Gemini") {
-                const { geminiAiApiType, contents } = body.filedObj
-                await reduceToken(deviceId, uniqueId, apiProvider, geminiAiApiType)
-                if (geminiAiApiType === "chatCompletions") {
+                const { apiType, contents } = body.filedObj
+                const createNewArray = contents.map(item => ({
+                    role: item.role,
+                    parts: [
+                        { text: item.text || "" }
+                    ]
+                }));
+                await reduceToken(deviceId, uniqueId, apiProvider, apiType)
+                if (apiType === "chatCompletions") {
                     try {
                         let chatCompletions = await axios({
                             url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
@@ -231,14 +239,20 @@ exports.provider = async (req, res) => {
                                 'Content-Type': 'application/json'
                             },
                             data: {
-                                contents: contents
+                                contents: createNewArray
                             }
                         });
                         chatCompletions = chatCompletions.data
-                        chatCompletions["userDetails"] = apiSendUserDetails
+                        const resChatCompletions = {
+                            content: {
+                                role: chatCompletions.candidates[0]["content"]["role"],
+                                text: chatCompletions.candidates[0]["content"]["parts"][0]["text"]
+                            },
+                            userDetails: apiSendUserDetails
+                        }
 
                         res.status(200).json({
-                            data: chatCompletions
+                            data: resChatCompletions
                         })
                     } catch (error) {
                         console.log("--error---", error.response.data)
@@ -248,35 +262,6 @@ exports.provider = async (req, res) => {
                     }
                 }
             }
-
-            // if (apiProvider === "Deepseek") {
-            //     const OpenAI = require("openai");
-            //     const openai = new OpenAI({
-            //         apiKey: process.env.DEEPSEEK_API_KEY, // Replace with a valid DeepSeek API key
-            //         baseURL: "https://api.deepseek.com",
-            //     });
-
-            //     const { deepseekAiApiType, messages } = body.deepseek
-            //     await reduceToken(deviceId, uniqueId, apiProvider, deepseekAiApiType)
-            //     if (deepseekAiApiType === "chatCompletions") {
-            //         try {
-            //             const sendMessage = await openai.chat.completions.create({
-            //                 model: "deepseek-chat", // Try "deepseek-chat" if "deepseek-reasoner" fails
-            //                 messages: messages,
-            //             });
-            //             sendMessage["userDetails"] = apiSendUserDetails
-
-            //             res.status(200).json({
-            //                 data: sendMessage
-            //             })
-            //         } catch (error) {
-            //             console.log("--error---", error.response.data)
-            //             res.status(400).json({
-            //                 message: "Deepseek chat completion error",
-            //             })
-            //         }
-            //     }
-            // }
         }
     } catch (error) {
         console.log(error);
