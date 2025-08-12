@@ -19,7 +19,7 @@ exports.provider = async (req, res) => {
             })
         } else {
             if (apiProvider === "OpenAi") {
-                const { threadId, assistant_id, runId, messages, apiType } = body.filedObj
+                const { threadId, assistant_id, runId, messages, apiType, contents } = body.filedObj
                 let getMetadata = notusedToken.metadata != null ? JSON.parse(notusedToken.metadata) : {}
                 const getThredId = (getMetadata && getMetadata.filedObj && getMetadata.filedObj.threadId) === threadId ? false : true
                 if (apiType === "createThread") {
@@ -144,7 +144,7 @@ exports.provider = async (req, res) => {
                 }
                 if (apiType === "chatCompletion") {
                     await reduceToken(deviceId, uniqueId, apiProvider, apiType)
-                    if (body && body.filedObj && messages) {
+                    if (body && body.filedObj && contents) {
                         try {
                             let getRunStatus = await axios({
                                 url: `https://api.openai.com/v1/chat/completions`,
@@ -155,7 +155,7 @@ exports.provider = async (req, res) => {
                                 },
                                 data: {
                                     "model": "gpt-4o",
-                                    messages: messages
+                                    messages: contents
                                 }
                             });
 
