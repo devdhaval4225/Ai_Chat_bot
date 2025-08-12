@@ -145,6 +145,12 @@ exports.provider = async (req, res) => {
                 if (apiType === "chatCompletion") {
                     await reduceToken(deviceId, uniqueId, apiProvider, apiType)
                     if (body && body.filedObj && contents) {
+
+                        const newContents = contents.map(obj => ({
+                            ...obj,
+                            content: obj.text
+                        }));
+
                         try {
                             let getRunStatus = await axios({
                                 url: `https://api.openai.com/v1/chat/completions`,
@@ -155,7 +161,7 @@ exports.provider = async (req, res) => {
                                 },
                                 data: {
                                     "model": "gpt-4o",
-                                    messages: contents
+                                    messages: newContents
                                 }
                             });
 
@@ -229,7 +235,7 @@ exports.provider = async (req, res) => {
                     ]
                 }));
                 await reduceToken(deviceId, uniqueId, apiProvider, apiType)
-                if (apiType === "chatCompletions") {
+                if (apiType === "chatCompletion") {
                     try {
                         let chatCompletions = await axios({
                             url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
