@@ -1,7 +1,7 @@
 const axios = require("axios");
 const { checkToken, reduceToken } = require("../../helper/common");
 const User = require("../../model/user.model");
-const { _, pick } = require("lodash")
+const { _, pick, omit } = require("lodash")
 
 exports.provider = async (req, res) => {
     try {
@@ -148,7 +148,7 @@ exports.provider = async (req, res) => {
 
                         const newContents = contents.map(obj => ({
                             ...obj,
-                            content: obj.text
+                            content: obj.text,
                         }));
 
                         try {
@@ -165,16 +165,23 @@ exports.provider = async (req, res) => {
                                 }
                             });
 
-                            const pickRunStatusData = pick(getRunStatus.data, ['id', 'created', 'choices'])
-                            pickRunStatusData.choices = pickRunStatusData.choices.map(choice => ({ message: pick(choice.message, ['role', 'content']), index: choice.index }));
-                            getRunStatus = pickRunStatusData
-                            getRunStatus["userDetails"] = apiSendUserDetails
+                            const pickRunStatusData = [
+                                {
+                                    role: getRunStatus.data.choices[0]["message"]["role"],
+                                    text: getRunStatus.data.choices[0]["message"]["content"]
+                                }
+                            ]
+
+                            const chatComRes = {
+                                content: pickRunStatusData,
+                                userDetails: apiSendUserDetails
+                            }
 
                             res.status(200).json({
-                                data: getRunStatus
+                                data: chatComRes
                             })
                         } catch (error) {
-                            console.log("Chat Completion Error", error.response);
+                            console.log("Chat Completion Error", error);
                             res.status(400).json({
                                 message: "Open ai Chat Completion Error"
                             })
@@ -190,10 +197,15 @@ exports.provider = async (req, res) => {
             }
 
             if (apiProvider === "MistralAi") {
-                const { apiType, messages } = body.filedObj
+                const { apiType, messages, contents } = body.filedObj
                 await reduceToken(deviceId, uniqueId, apiProvider, apiType)
 
-                if (apiType === "chatCompletions") {
+                const newContents = contents.map(({ text, ...rest }) => ({
+                    ...rest,
+                    content: text
+                }));
+
+                if (apiType === "chatCompletion") {
                     try {
                         let chatCompletions = await axios({
                             url: 'https://api.mistral.ai/v1/chat/completions',
@@ -205,20 +217,22 @@ exports.provider = async (req, res) => {
                             },
                             data: {
                                 "model": "mistral-large-latest",
-                                "messages": messages,
+                                "messages": newContents,
                                 "temperature": 0.7,
                                 "max_tokens": 256
                             }
                         });
+                        const contentRes = chatCompletions.data.choices.map(msg => ({ role: msg.message.role, text: msg.message.content }))
                         const mistralRes = {
-                            content: chatCompletions.data.choices[0]["message"],
-                            userDetails: apiSendUserDetails
+                            content: contentRes,
+                            userDetails: apiSendUserDetails,
                         }
 
                         res.status(200).json({
                             data: mistralRes
                         })
                     } catch (error) {
+                        console.log("---error--", error.response.data)
                         res.status(400).json({
                             message: "Mistral chat completions erorr",
                         })
@@ -248,12 +262,12 @@ exports.provider = async (req, res) => {
                                 contents: createNewArray
                             }
                         });
-                        chatCompletions = chatCompletions.data
+                        const content = chatCompletions.data.candidates.map(msg => ({
+                            role: msg.content.role,
+                            text: msg.content.parts.map((v) => v.text).join(",")
+                        }))
                         const resChatCompletions = {
-                            content: {
-                                role: chatCompletions.candidates[0]["content"]["role"],
-                                text: chatCompletions.candidates[0]["content"]["parts"][0]["text"]
-                            },
+                            content: content,
                             userDetails: apiSendUserDetails
                         }
 
@@ -261,7 +275,7 @@ exports.provider = async (req, res) => {
                             data: resChatCompletions
                         })
                     } catch (error) {
-                        console.log("--error---", error.response.data)
+                        console.log("--error---", error)
                         res.status(400).json({
                             message: "Gemini chat completion error",
                         })

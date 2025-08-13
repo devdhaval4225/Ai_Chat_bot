@@ -76,21 +76,21 @@ exports.pdfSummaryBot = async (req, res) => {
                 const threadUploadId = createThread.id
 
 
-                // Thread Run
-                const runRes = await axios.post(
-                    `https://api.openai.com/v1/threads/${threadUploadId}/runs`,
-                    {
-                        assistant_id: assistantId,
-                    },
-                    {
-                        headers: {
-                            Authorization: `Bearer ${process.env.OPEN_AI_API_KEY}`,
-                            'OpenAI-Beta': 'assistants=v2',
-                            'Content-Type': 'application/json',
-                        },
-                    }
-                );
-                const runUploadId = runRes.data.id;
+                // // Thread Run
+                // const runRes = await axios.post(
+                //     `https://api.openai.com/v1/threads/${threadUploadId}/runs`,
+                //     {
+                //         assistant_id: assistantId,
+                //     },
+                //     {
+                //         headers: {
+                //             Authorization: `Bearer ${process.env.OPEN_AI_API_KEY}`,
+                //             'OpenAI-Beta': 'assistants=v2',
+                //             'Content-Type': 'application/json',
+                //         },
+                //     }
+                // );
+                // const runUploadId = runRes.data.id;
 
                 getMetadata["pdfObj"] = { threadId: threadUploadId, fileId: fileId }
                 await User.update(
@@ -99,7 +99,7 @@ exports.pdfSummaryBot = async (req, res) => {
                 );
 
                 res.status(200).json({
-                    data: { threadId: threadUploadId, runId: runUploadId, fileId: fileId },
+                    data: { threadId: threadUploadId, fileId: fileId },
                     status: 200
                 });
 
@@ -131,8 +131,8 @@ exports.pdfSummaryBot = async (req, res) => {
             try {
                 const body = req.body
 
-                const checkFileAndThred = (getMetadata && getMetadata.pdfObj && getMetadata.pdfObj) && 
-                    body.threadId === getMetadata.pdfObj.threadId && 
+                const checkFileAndThred = (getMetadata && getMetadata.pdfObj && getMetadata.pdfObj) &&
+                    body.threadId === getMetadata.pdfObj.threadId &&
                     body.fileId === getMetadata.pdfObj.fileId
 
                 if (checkFileAndThred === false) {
@@ -145,28 +145,21 @@ exports.pdfSummaryBot = async (req, res) => {
                 }
 
 
-                // Thread in send Message and find attachments 
-                let sendMessageResponse = await axios({
-                    url: `https://api.openai.com/v1/threads/${body.threadId}/messages`,
-                    method: 'post',
-                    headers: {
-                        'Authorization': `Bearer ${process.env.OPEN_AI_API_KEY}`,
-                        'OpenAI-Beta': 'assistants=v2',
-                        'Content-Type': 'application/json'
+                const runRes = await axios.post(
+                    `https://api.openai.com/v1/threads/${body.threadId}/runs`,
+                    {
+                        assistant_id: assistantId,
                     },
-                    data: {
-                        role: 'user',
-                        content: body.text,
-                        attachments: [
-                            {
-                                file_id: body.fileId,
-                                tools: [{ type: 'file_search' }],
-                            },
-                        ],
+                    {
+                        headers: {
+                            Authorization: `Bearer ${process.env.OPEN_AI_API_KEY}`,
+                            'OpenAI-Beta': 'assistants=v2',
+                            'Content-Type': 'application/json',
+                        },
                     }
+                );
+                const runUploadId = runRes.data.id;
 
-                })
-                sendMessageResponse = sendMessageResponse.data
 
                 // ✅ Poll run status
                 let runStatus = 'queued';
@@ -175,11 +168,12 @@ exports.pdfSummaryBot = async (req, res) => {
 
                     try {
                         const pollRes = await axios.get(
-                            `https://api.openai.com/v1/threads/${body.threadId}/runs/${body.runId}`,
+                            `https://api.openai.com/v1/threads/${body.threadId}/runs/${runUploadId}`,
                             {
                                 headers: {
                                     Authorization: `Bearer ${process.env.OPEN_AI_API_KEY}`,
                                     'OpenAI-Beta': 'assistants=v2',
+                                    'Content-Type': 'application/json'
                                 },
                             }
                         );
@@ -196,7 +190,7 @@ exports.pdfSummaryBot = async (req, res) => {
                             return;
                         }
                     } catch (error) {
-                        console.log("---error--", error.response);
+                        console.log("---error--", error);
                         res.status(500).json({
                             message: "Error polling run status",
                             status: 500
@@ -206,6 +200,28 @@ exports.pdfSummaryBot = async (req, res) => {
 
 
                 }
+
+                // // Thread in send Message and find attachments 
+                let sendMessageResponse = await axios({
+                    url: `https://api.openai.com/v1/threads/${body.threadId}/messages`,
+                    method: 'post',
+                    headers: {
+                        'Authorization': `Bearer ${process.env.OPEN_AI_API_KEY}`,
+                        'OpenAI-Beta': 'assistants=v2'
+                    },
+                    data: {
+                        role: 'user',
+                        content: body.text,
+                        attachments: [
+                            {
+                                file_id: body.fileId,
+                                tools: [{ type: 'file_search' }],
+                            },
+                        ],
+                    }
+
+                })
+                sendMessageResponse = sendMessageResponse.data
 
                 // ✅ Get final answer
                 let answerRes = await axios.get(
@@ -218,20 +234,21 @@ exports.pdfSummaryBot = async (req, res) => {
                     }
                 );
                 answerRes = answerRes.data
+
                 const formatted = answerRes.data.map(item => ({
                     role: item.role,
                     text: item.content[0]?.text?.value || ""
                 }));
-                const newRes = {
-                    content: formatted,
-                    userDetails: apiSendUserDetails
-                }
+
                 res.status(200).json({
-                    data: newRes,
+                    data: {
+                        content: formatted,
+                        userDetails: apiSendUserDetails
+                    },
                     status: 200
                 })
             } catch (error) {
-                console.log(error);
+                console.log(error.response);
 
                 res.status(500).json({
                     message: "Something went wrong",
