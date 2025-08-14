@@ -3,22 +3,23 @@ const History = require("../model/tokenhistory.model");
 const { Sequelize, QueryTypes } = require('sequelize');
 const CryptoJS = require("crypto-js");
 
-exports.reduceToken = async (deviceId, uniqueId, apiProvider, apiUseType) => {
+exports.reduceToken = async (deviceId, uniqueId, apiProvider, apiUseType, isThred = false) => {
     try {
         const findUser = await this.checkToken(deviceId);
         const userUniqueId = findUser.uniqueId
-        if(userUniqueId === uniqueId) {
+        if (!isThred && userUniqueId === uniqueId) {
             return;
         } else {
+            const updatedUniqueId = isThred === true ? userUniqueId : uniqueId
             const isSuborNot = (findUser.reminToken - 1) == 0 ? 0 : findUser.isSubscribe
             const expDate = (findUser.reminToken - 1) == 0 ? null : findUser.expireDate
             const newTokenData = await User.update(
                 {
                     reminToken: Sequelize.literal('reminToken - 1'),
                     usedToken: Sequelize.literal('usedToken + 1'),
-                    isSubscribe:isSuborNot,
+                    isSubscribe: isSuborNot,
                     expireDate: expDate,
-                    uniqueId:uniqueId
+                    uniqueId: updatedUniqueId
                 },
                 {
                     where: {
@@ -32,10 +33,10 @@ exports.reduceToken = async (deviceId, uniqueId, apiProvider, apiUseType) => {
             await History.create({
                 deviceId: deviceId,
                 apiProvider: apiProvider,
-                apiUseType:apiUseType,
-                totalToken:findTestToken.totalToken,
-                usedToken:findTestToken.usedToken,
-                reminToken:findTestToken.reminToken
+                apiUseType: apiUseType,
+                totalToken: findTestToken.totalToken,
+                usedToken: findTestToken.usedToken,
+                reminToken: findTestToken.reminToken
             })
         }
     } catch (error) {
@@ -60,7 +61,7 @@ exports.encrypt = async (text) => {
 };
 
 exports.decrypt = async (text) => {
-    const bytes  = await CryptoJS.AES.decrypt(text, process.env.SECRET_KEY);
+    const bytes = await CryptoJS.AES.decrypt(text, process.env.SECRET_KEY);
     const originalText = await bytes.toString(CryptoJS.enc.Utf8);
     return originalText;
 };
