@@ -21,7 +21,7 @@ exports.pdfSummaryBot = async (req, res) => {
 
         if (req.body.type === "upload") {
             try {
-                await reduceToken(req.body.deviceId, uniqueId, "Bot", "pdfSummaryBot-Upload")
+                await reduceToken(req.body.deviceId, uniqueId, "Bot", "pdfSummaryBot-Upload",true)
                 // Pdf Upload
                 const fileExtName = path.extname(req.file.originalname).toLowerCase()
                 const mimeType = [".pdf"]
