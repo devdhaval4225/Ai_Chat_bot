@@ -384,7 +384,7 @@ exports.pdfSummaryBot = async (req, res) => {
                     );
                     answerRes = answerRes.data
 
-                    const senMesFormatted = answerRes.data.map(item => ({
+                    const senMesFormatted = answerRes.data.filter(item => item.role === 'assistant').map(item => ({
                         role: item.role,
                         text: item.content[0]?.text?.value || ""
                     }));
