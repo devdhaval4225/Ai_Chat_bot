@@ -157,8 +157,24 @@ exports.pdfSummaryBot = async (req, res) => {
                     { where: { deviceId: req.body.deviceId } }
                 );
 
+                let answerRes = await axios.get(
+                    `https://api.openai.com/v1/threads/${threadUploadId}/messages`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${process.env.OPEN_AI_API_KEY}`,
+                            'OpenAI-Beta': 'assistants=v2',
+                            'Content-Type': 'application/json'
+                        },
+                    }
+                );
+                answerRes = answerRes.data
+                const formatted = answerRes.data.filter(item => item.role === 'assistant').map(item => ({
+                    role: item.role,
+                    text: item.content[0]?.text?.value || ""
+                }));
+
                 res.status(200).json({
-                    data: { threadId: threadUploadId, fileId: fileId },
+                    data: { threadId: threadUploadId, content: formatted, userDetails: apiSendUserDetails },
                     status: 200
                 });
 
@@ -394,7 +410,7 @@ exports.pdfSummaryBot = async (req, res) => {
                     );
                     answerRes = answerRes.data
 
-                    const formatted = answerRes.data.map(item => ({
+                    const formatted = answerRes.data.filter(item => item.role === 'assistant').map(item => ({
                         role: item.role,
                         text: item.content[0]?.text?.value || ""
                     }));
