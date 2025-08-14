@@ -76,23 +76,82 @@ exports.pdfSummaryBot = async (req, res) => {
                 const threadUploadId = createThread.id
 
 
-                // // Thread Run
-                // const runRes = await axios.post(
-                //     `https://api.openai.com/v1/threads/${threadUploadId}/runs`,
-                //     {
-                //         assistant_id: assistantId,
-                //     },
-                //     {
-                //         headers: {
-                //             Authorization: `Bearer ${process.env.OPEN_AI_API_KEY}`,
-                //             'OpenAI-Beta': 'assistants=v2',
-                //             'Content-Type': 'application/json',
-                //         },
-                //     }
-                // );
-                // const runUploadId = runRes.data.id;
+                // Thread in send Message and find attachments 
+                let sendMessageResponse = await axios({
+                    url: `https://api.openai.com/v1/threads/${threadUploadId}/messages`,
+                    method: 'post',
+                    headers: {
+                        'Authorization': `Bearer ${process.env.OPEN_AI_API_KEY}`,
+                        'OpenAI-Beta': 'assistants=v2'
+                    },
+                    data: {
+                        role: 'user',
+                        content: req.body.text,
+                        attachments: [
+                            {
+                                file_id: fileId,
+                                tools: [{ type: 'file_search' }],
+                            },
+                        ],
+                    }
 
-                getMetadata["pdfObj"] = { threadId: threadUploadId, fileId: fileId }
+                })
+                sendMessageResponse = sendMessageResponse.data
+
+                // Thread Run
+                const runRes = await axios.post(
+                    `https://api.openai.com/v1/threads/${threadUploadId}/runs`,
+                    {
+                        assistant_id: assistantId,
+                    },
+                    {
+                        headers: {
+                            Authorization: `Bearer ${process.env.OPEN_AI_API_KEY}`,
+                            'OpenAI-Beta': 'assistants=v2',
+                            'Content-Type': 'application/json',
+                        },
+                    }
+                );
+                const runUploadId = runRes.data.id;
+
+                // ✅ Poll run status
+                let runStatus = 'queued';
+                while (runStatus !== 'completed') {
+                    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+                    try {
+                        const pollRes = await axios.get(
+                            `https://api.openai.com/v1/threads/${threadUploadId}/runs/${runUploadId}`,
+                            {
+                                headers: {
+                                    Authorization: `Bearer ${process.env.OPEN_AI_API_KEY}`,
+                                    'OpenAI-Beta': 'assistants=v2',
+                                    'Content-Type': 'application/json'
+                                },
+                            }
+                        );
+
+                        runStatus = pollRes.data.status;
+                        console.log("--runStatus---", runStatus)
+                        if (runStatus === 'failed' || runStatus === 'cancelled') {
+                            res.status(400).json({
+                                message: `Run ${runStatus}`,
+                                status: 400
+                            })
+                            return;
+                        }
+                    } catch (error) {
+                        console.log("---error--", error);
+                        res.status(500).json({
+                            message: "Error polling run status",
+                            status: 500
+                        });
+                        return;
+                    }
+                }
+
+
+                getMetadata["pdfObj"] = { threadId: threadUploadId, runId: runUploadId, fileId: fileId }
                 await User.update(
                     { metadata: JSON.stringify(getMetadata) },
                     { where: { deviceId: req.body.deviceId } }
@@ -111,7 +170,7 @@ exports.pdfSummaryBot = async (req, res) => {
                     }
                 });
             } catch (error) {
-                console.log(error.response);
+                console.log(error);
                 res.status(500).json({
                     message: "Something went wrong",
                     status: 500
@@ -135,118 +194,219 @@ exports.pdfSummaryBot = async (req, res) => {
                     body.threadId === getMetadata.pdfObj.threadId &&
                     body.fileId === getMetadata.pdfObj.fileId
 
-                if (checkFileAndThred === false) {
-                    getMetadata["pdfObj"] = { threadId: body.threadId, fileId: body.fileId }
-                    await User.update(
-                        { metadata: JSON.stringify(getMetadata) },
-                        { where: { deviceId: body.deviceId } }
-                    );
-                    await reduceToken(body.deviceId, uniqueId, "Bot", "pdfSummaryBot-Run")
-                }
+                // if (checkFileAndThred === false) {
+                //     getMetadata["pdfObj"] = { threadId: body.threadId, fileId: body.fileId }
+                //     await User.update(
+                //         { metadata: JSON.stringify(getMetadata) },
+                //         { where: { deviceId: body.deviceId } }
+                //     );
+                //     await reduceToken(body.deviceId, uniqueId, "Bot", "pdfSummaryBot-Run")
+                // }
 
 
-                const runRes = await axios.post(
-                    `https://api.openai.com/v1/threads/${body.threadId}/runs`,
-                    {
-                        assistant_id: assistantId,
-                    },
-                    {
-                        headers: {
-                            Authorization: `Bearer ${process.env.OPEN_AI_API_KEY}`,
-                            'OpenAI-Beta': 'assistants=v2',
-                            'Content-Type': 'application/json',
-                        },
-                    }
-                );
-                const runUploadId = runRes.data.id;
+                // const runRes = await axios.post(
+                //     `https://api.openai.com/v1/threads/${body.threadId}/runs`,
+                //     {
+                //         assistant_id: assistantId,
+                //     },
+                //     {
+                //         headers: {
+                //             Authorization: `Bearer ${process.env.OPEN_AI_API_KEY}`,
+                //             'OpenAI-Beta': 'assistants=v2',
+                //             'Content-Type': 'application/json',
+                //         },
+                //     }
+                // );
+                // const runUploadId = runRes.data.id;
 
 
                 // ✅ Poll run status
-                let runStatus = 'queued';
-                while (runStatus !== 'completed') {
-                    await new Promise((resolve) => setTimeout(resolve, 1000));
+                // let runStatus = 'queued';
+                // while (runStatus !== 'completed') {
+                //     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-                    try {
-                        const pollRes = await axios.get(
-                            `https://api.openai.com/v1/threads/${body.threadId}/runs/${runUploadId}`,
-                            {
-                                headers: {
-                                    Authorization: `Bearer ${process.env.OPEN_AI_API_KEY}`,
-                                    'OpenAI-Beta': 'assistants=v2',
-                                    'Content-Type': 'application/json'
-                                },
-                            }
-                        );
+                //     try {
+                //         const pollRes = await axios.get(
+                //             `https://api.openai.com/v1/threads/${body.threadId}/runs/${runUploadId}`,
+                //             {
+                //                 headers: {
+                //                     Authorization: `Bearer ${process.env.OPEN_AI_API_KEY}`,
+                //                     'OpenAI-Beta': 'assistants=v2',
+                //                     'Content-Type': 'application/json'
+                //                 },
+                //             }
+                //         );
 
-                        runStatus = pollRes.data.status;
-                        console.log("--runStatus---", runStatus)
-                        if (runStatus === 'failed' || runStatus === 'cancelled') {
-                            console.log("======runStatus======", runStatus)
-                            res.status(400).json({
-                                message: `Run ${runStatus}`,
-                                status: 400
-                            })
-                            console.log("-=-=-=-=-=-=pollRes.data-=-==-", pollRes.data)
-                            return;
-                        }
-                    } catch (error) {
-                        console.log("---error--", error);
-                        res.status(500).json({
-                            message: "Error polling run status",
-                            status: 500
-                        });
-                        return;
-                    }
+                //         runStatus = pollRes.data.status;
+                //         console.log("--runStatus---", runStatus)
+                //         if (runStatus === 'failed' || runStatus === 'cancelled') {
+                //             console.log("======runStatus======", runStatus)
+                //             res.status(400).json({
+                //                 message: `Run ${runStatus}`,
+                //                 status: 400
+                //             })
+                //             console.log("-=-=-=-=-=-=pollRes.data-=-==-", pollRes.data)
+                //             return;
+                //         }
+                //     } catch (error) {
+                //         console.log("---error--", error);
+                //         res.status(500).json({
+                //             message: "Error polling run status",
+                //             status: 500
+                //         });
+                //         return;
+                //     }
+                // }
 
 
-                }
+
+
 
                 // // Thread in send Message and find attachments 
-                let sendMessageResponse = await axios({
-                    url: `https://api.openai.com/v1/threads/${body.threadId}/messages`,
-                    method: 'post',
-                    headers: {
-                        'Authorization': `Bearer ${process.env.OPEN_AI_API_KEY}`,
-                        'OpenAI-Beta': 'assistants=v2'
-                    },
-                    data: {
-                        role: 'user',
-                        content: body.text,
-                        attachments: [
-                            {
-                                file_id: body.fileId,
-                                tools: [{ type: 'file_search' }],
-                            },
-                        ],
-                    }
+                // let sendMessageResponse = await axios({
+                //     url: `https://api.openai.com/v1/threads/${body.threadId}/messages`,
+                //     method: 'post',
+                //     headers: {
+                //         'Authorization': `Bearer ${process.env.OPEN_AI_API_KEY}`,
+                //         'OpenAI-Beta': 'assistants=v2'
+                //     },
+                //     data: {
+                //         role: 'user',
+                //         content: body.text,
+                //         attachments: [
+                //             {
+                //                 file_id: body.fileId,
+                //                 tools: [{ type: 'file_search' }],
+                //             },
+                //         ],
+                //     }
 
-                })
-                sendMessageResponse = sendMessageResponse.data
+                // })
+                // sendMessageResponse = sendMessageResponse.data
+
 
                 // ✅ Get final answer
-                let answerRes = await axios.get(
-                    `https://api.openai.com/v1/threads/${body.threadId}/messages`,
-                    {
+
+
+                if (body.text) {
+                    let sendMessage = await axios({
+                        url: `https://api.openai.com/v1/threads/${body.threadId}/messages`,
+                        method: 'post',
                         headers: {
-                            Authorization: `Bearer ${process.env.OPEN_AI_API_KEY}`,
-                            'OpenAI-Beta': 'assistants=v2',
+                            'Authorization': `Bearer ${process.env.OPEN_AI_API_KEY}`,
+                            'OpenAI-Beta': 'assistants=v2'
                         },
+                        data: {
+                            role: 'user',
+                            content: [{
+                                type: 'text',
+                                'text': body.text
+                            }],
+                            // content: body.text,
+                        }
+
+                    })
+
+                    const runRes = await axios.post(
+                        `https://api.openai.com/v1/threads/${body.threadId}/runs`,
+                        {
+                            assistant_id: assistantId,
+                        },
+                        {
+                            headers: {
+                                Authorization: `Bearer ${process.env.OPEN_AI_API_KEY}`,
+                                'OpenAI-Beta': 'assistants=v2',
+                                'Content-Type': 'application/json',
+                            },
+                        }
+                    );
+                    const runUploadId = runRes.data.id;
+                    let runStatus = 'queued';
+                    while (runStatus !== 'completed') {
+                        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+                        try {
+                            const pollRes = await axios.get(
+                                `https://api.openai.com/v1/threads/${body.threadId}/runs/${runUploadId}`,
+                                {
+                                    headers: {
+                                        Authorization: `Bearer ${process.env.OPEN_AI_API_KEY}`,
+                                        'OpenAI-Beta': 'assistants=v2',
+                                        'Content-Type': 'application/json'
+                                    },
+                                }
+                            );
+
+                            runStatus = pollRes.data.status;
+                            console.log("--runStatus---", runStatus)
+                            if (runStatus === 'failed' || runStatus === 'cancelled') {
+                                res.status(400).json({
+                                    message: `Run ${runStatus}`,
+                                    status: 400
+                                })
+                                return;
+                            }
+                        } catch (error) {
+                            console.log("---error--", error);
+                            res.status(500).json({
+                                message: "Error polling run status",
+                                status: 500
+                            });
+                            return;
+                        }
                     }
-                );
-                answerRes = answerRes.data
 
-                const formatted = answerRes.data.map(item => ({
-                    role: item.role,
-                    text: item.content[0]?.text?.value || ""
-                }));
+                    let answerRes = await axios.get(
+                        `https://api.openai.com/v1/threads/${body.threadId}/messages`,
+                        {
+                            headers: {
+                                Authorization: `Bearer ${process.env.OPEN_AI_API_KEY}`,
+                                'OpenAI-Beta': 'assistants=v2',
+                                'Content-Type': 'application/json'
+                            },
+                        }
+                    );
+                    answerRes = answerRes.data
 
-                res.status(200).json({
-                    data: {
-                        content: formatted,
-                        userDetails: apiSendUserDetails
-                    },
-                    status: 200
-                })
+                    const senMesFormatted = answerRes.data.map(item => ({
+                        role: item.role,
+                        text: item.content[0]?.text?.value || ""
+                    }));
+
+                    res.status(200).json({
+                        data: {
+                            content: senMesFormatted,
+                            userDetails: apiSendUserDetails
+                        },
+                        status: 200
+                    })
+
+                } else {
+                    let answerRes = await axios.get(
+                        `https://api.openai.com/v1/threads/${body.threadId}/messages`,
+                        {
+                            headers: {
+                                Authorization: `Bearer ${process.env.OPEN_AI_API_KEY}`,
+                                'OpenAI-Beta': 'assistants=v2',
+                                'Content-Type': 'application/json'
+                            },
+                        }
+                    );
+                    answerRes = answerRes.data
+
+                    const formatted = answerRes.data.map(item => ({
+                        role: item.role,
+                        text: item.content[0]?.text?.value || ""
+                    }));
+
+                    res.status(200).json({
+                        data: {
+                            content: formatted,
+                            userDetails: apiSendUserDetails
+                        },
+                        status: 200
+                    })
+                }
             } catch (error) {
                 console.log(error.response);
 
