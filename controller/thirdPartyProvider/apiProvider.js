@@ -5,7 +5,7 @@ const { _, pick, omit } = require("lodash")
 
 exports.provider = async (req, res) => {
     try {
-        const uniqueId = req.headers.uniqueId
+        const uniqueId = req.headers.uniqueid
         // const { deviceId } = req.params
         const body = req.body
         const { apiProvider, deviceId } = body
@@ -39,7 +39,7 @@ exports.provider = async (req, res) => {
                         createThread["userDetails"] = apiSendUserDetails
 
                         getMetadata["openAi"] = createThread.id
-                        await reduceToken(deviceId, uniqueId, apiProvider, apiType)
+                        await reduceToken(deviceId, uniqueId, apiProvider, apiType, true)
                         await User.update(
                             { metadata: JSON.stringify(getMetadata) },
                             { where: { deviceId: deviceId } }
@@ -143,7 +143,7 @@ exports.provider = async (req, res) => {
 
                 }
                 if (apiType === "chatCompletion") {
-                    await reduceToken(deviceId, uniqueId, apiProvider, apiType)
+                    // await reduceToken(deviceId, uniqueId, apiProvider, apiType)
                     if (body && body.filedObj && contents) {
 
                         const newContents = contents.map(obj => ({
@@ -161,7 +161,7 @@ exports.provider = async (req, res) => {
                                 },
                                 data: {
                                     "model": "gpt-4o",
-                                    messages: newContents
+                                    messages: newContents,
                                 }
                             });
 
