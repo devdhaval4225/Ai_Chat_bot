@@ -171,6 +171,7 @@ exports.pdfSummaryBot = async (req, res) => {
                     role: item.role,
                     text: item.content[0]?.text?.value || ""
                 }));
+                
 
                 updateUserData = await checkToken(req.body.deviceId)
 
