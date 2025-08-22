@@ -172,7 +172,7 @@ exports.pdfSummaryBot = async (req, res) => {
                     text: item.content[0]?.text?.value || ""
                 }));
 
-                updateUserData = await checkToken(deviceId)
+                updateUserData = await checkToken(req.body.deviceId)
 
                 res.status(200).json({
                     data: { threadId: threadUploadId, content: formatted, userDetails: pick(updateUserData, ['id', 'totalToken', 'usedToken', 'reminToken', 'planType', 'isSubscribe', 'expireDate']) },
@@ -204,7 +204,7 @@ exports.pdfSummaryBot = async (req, res) => {
         }
 
         if (req.body.type === "run") {
-            updateUserData = await checkToken(deviceId)
+            updateUserData = await checkToken(req.body.deviceId)
             const apiSendUserDetails = pick(updateUserData, ['id', 'totalToken', 'usedToken', 'reminToken', 'planType', 'isSubscribe', 'expireDate']);
 
             try {
