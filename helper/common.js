@@ -2,6 +2,7 @@ const User = require("../model/user.model");
 const History = require("../model/tokenhistory.model");
 const { Sequelize, QueryTypes } = require('sequelize');
 const CryptoJS = require("crypto-js");
+const moment = require("moment");
 
 exports.reduceToken = async (deviceId, uniqueId, apiProvider, apiUseType, isThred = false) => {
     try {
@@ -13,13 +14,19 @@ exports.reduceToken = async (deviceId, uniqueId, apiProvider, apiUseType, isThre
             const updatedUniqueId = isThred === true ? userUniqueId : uniqueId
             const isSuborNot = (findUser.reminToken - 1) == 0 ? 0 : findUser.isSubscribe
             const expDate = (findUser.reminToken - 1) == 0 ? null : findUser.expireDate
+
+            const currentDate = moment();
+            const expireDate = moment(findUser.expireDate);
+            const checkDate = expireDate.isAfter(currentDate)
+
             const newTokenData = await User.update(
                 {
                     reminToken: Sequelize.literal('reminToken - 1'),
                     usedToken: Sequelize.literal('usedToken + 1'),
-                    isSubscribe: isSuborNot,
+                    isSubscribe: checkDate ? findUser.isSubscribe : 0,
                     expireDate: expDate,
-                    uniqueId: updatedUniqueId
+                    uniqueId: updatedUniqueId,
+                    planType: checkDate ? findUser.planType : "free",
                 },
                 {
                     where: {

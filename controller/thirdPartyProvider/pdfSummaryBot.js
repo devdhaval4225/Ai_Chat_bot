@@ -16,12 +16,11 @@ exports.pdfSummaryBot = async (req, res) => {
         const uniqueId = header['uniqueid'];
         const userData = await checkToken(req.body.deviceId)
         const getMetadata = userData.metadata != null ? JSON.parse(userData.metadata) : {}
-        const apiSendUserDetails = pick(userData, ['id', 'totalToken', 'usedToken', 'reminToken', 'planType', 'isSubscribe', 'expireDate']);
-
+        let updateUserData
 
         if (req.body.type === "upload") {
             try {
-                await reduceToken(req.body.deviceId, uniqueId, "Bot", "pdfSummaryBot-Upload",true)
+                await reduceToken(req.body.deviceId, uniqueId, "Bot", "pdfSummaryBot-Upload", true)
                 // Pdf Upload
                 const fileExtName = path.extname(req.file.originalname).toLowerCase()
                 const mimeType = [".pdf"]
@@ -173,8 +172,10 @@ exports.pdfSummaryBot = async (req, res) => {
                     text: item.content[0]?.text?.value || ""
                 }));
 
+                updateUserData = await checkToken(deviceId)
+
                 res.status(200).json({
-                    data: { threadId: threadUploadId, content: formatted, userDetails: apiSendUserDetails },
+                    data: { threadId: threadUploadId, content: formatted, userDetails: pick(updateUserData, ['id', 'totalToken', 'usedToken', 'reminToken', 'planType', 'isSubscribe', 'expireDate']) },
                     status: 200
                 });
 
@@ -203,6 +204,9 @@ exports.pdfSummaryBot = async (req, res) => {
         }
 
         if (req.body.type === "run") {
+            updateUserData = await checkToken(deviceId)
+            const apiSendUserDetails = pick(updateUserData, ['id', 'totalToken', 'usedToken', 'reminToken', 'planType', 'isSubscribe', 'expireDate']);
+
             try {
                 const body = req.body
 

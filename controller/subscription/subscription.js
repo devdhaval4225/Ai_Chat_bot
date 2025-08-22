@@ -58,14 +58,15 @@ exports.planSubscribe = async (req, res) => {
                     const expireDate = moment(findUserDetails.expireDate);
                     const checkDate = expireDate.isAfter(currentDate)
 
-                    if (findUserDetails.reminToken == 0 || !checkDate) {
+                    if (findUserDetails.reminToken == 0 || (!checkDate && findUserDetails.planType != "free")) {
                         const addDate = currentDate.add(1, findPlan.type)
                         const userTokenUpgrade = await User.update(
                             {
                                 reminToken: findUserDetails.reminToken + findPlan.token,
                                 totalToken: findUserDetails.totalToken + findPlan.token,
                                 isSubscribe: 1,
-                                expireDate: addDate
+                                expireDate: addDate,
+                                planType: findPlan.type
                             },
                             { where: { deviceId: deviceId } },
                         )
@@ -119,10 +120,11 @@ exports.planSubscribe = async (req, res) => {
                         status: 400
                     })
                 } else {
-                    const avalableToken = findCurrentPlan.token < findUserDetails.reminToken ? findCurrentPlan.token : 0
+                    let avalableToken = findUserDetails.reminToken - findCurrentPlan.token
+                    avalableToken = avalableToken < 0 ? 0 : avalableToken
 
                     const userTokenUpgrade = await User.update(
-                        { reminToken: avalableToken, isSubscribe: 0 },
+                        { reminToken: avalableToken, isSubscribe: 0, expireDate: null, planType: null },
                         { where: { deviceId: deviceId } },
                     );
 

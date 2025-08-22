@@ -11,7 +11,9 @@ exports.provider = async (req, res) => {
         const { apiProvider, deviceId } = body
 
         const notusedToken = await checkToken(body.deviceId)
-        const apiSendUserDetails = pick(notusedToken, ['id', 'totalToken', 'usedToken', 'reminToken', 'planType', 'isSubscribe', 'expireDate']);
+        let apiSendUserDetails
+        let updateUserData
+        // let apiSendUserDetails = pick(notusedToken, ['id', 'totalToken', 'usedToken', 'reminToken', 'planType', 'isSubscribe', 'expireDate']);
         const reminToken = notusedToken.reminToken
         if (reminToken == 0) {
             res.status(400).json({
@@ -36,10 +38,11 @@ exports.provider = async (req, res) => {
                         const pickThredData = pick(createThread.data, 'id')
                         createThread = pickThredData
 
-                        createThread["userDetails"] = apiSendUserDetails
-
                         getMetadata["openAi"] = createThread.id
                         await reduceToken(deviceId, uniqueId, apiProvider, apiType, true)
+                        updateUserData = await checkToken(deviceId)
+                        createThread["userDetails"] = pick(updateUserData, ['id', 'totalToken', 'usedToken', 'reminToken', 'planType', 'isSubscribe', 'expireDate']);
+
                         await User.update(
                             { metadata: JSON.stringify(getMetadata) },
                             { where: { deviceId: deviceId } }
@@ -80,8 +83,9 @@ exports.provider = async (req, res) => {
                             });
                             // console.log("--createThreadRun--",createThreadRun.data)
                             createThreadRun = createThreadRun.data
-                            createThreadRun["userDetails"] = apiSendUserDetails
 
+                            updateUserData = await checkToken(deviceId)
+                            createThreadRun["userDetails"] = pick(updateUserData, ['id', 'totalToken', 'usedToken', 'reminToken', 'planType', 'isSubscribe', 'expireDate']);
 
                             res.status(200).json({
                                 data: createThreadRun
@@ -124,7 +128,8 @@ exports.provider = async (req, res) => {
                                 },
                             });
                             getRunStatus = getRunStatus.data
-                            getRunStatus["userDetails"] = apiSendUserDetails
+                            updateUserData = await checkToken(deviceId)
+                            getRunStatus["userDetails"] = pick(updateUserData, ['id', 'totalToken', 'usedToken', 'reminToken', 'planType', 'isSubscribe', 'expireDate']);
 
                             res.status(200).json({
                                 data: getRunStatus
@@ -171,10 +176,11 @@ exports.provider = async (req, res) => {
                                     text: getRunStatus.data.choices[0]["message"]["content"]
                                 }
                             ]
+                            updateUserData = await checkToken(deviceId)
 
                             const chatComRes = {
                                 content: pickRunStatusData,
-                                userDetails: apiSendUserDetails
+                                userDetails: pick(updateUserData, ['id', 'totalToken', 'usedToken', 'reminToken', 'planType', 'isSubscribe', 'expireDate'])
                             }
 
                             res.status(200).json({
@@ -223,9 +229,11 @@ exports.provider = async (req, res) => {
                             }
                         });
                         const contentRes = chatCompletions.data.choices.map(msg => ({ role: msg.message.role, text: msg.message.content }))
+                        updateUserData = await checkToken(deviceId)
+
                         const mistralRes = {
                             content: contentRes,
-                            userDetails: apiSendUserDetails,
+                            userDetails: pick(updateUserData, ['id', 'totalToken', 'usedToken', 'reminToken', 'planType', 'isSubscribe', 'expireDate']),
                         }
 
                         res.status(200).json({
@@ -266,9 +274,11 @@ exports.provider = async (req, res) => {
                             role: msg.content.role,
                             text: msg.content.parts.map((v) => v.text).join(",")
                         }))
+                        updateUserData = await checkToken(deviceId)
+                        
                         const resChatCompletions = {
                             content: content,
-                            userDetails: apiSendUserDetails
+                            userDetails: pick(updateUserData, ['id', 'totalToken', 'usedToken', 'reminToken', 'planType', 'isSubscribe', 'expireDate'])
                         }
 
                         res.status(200).json({
