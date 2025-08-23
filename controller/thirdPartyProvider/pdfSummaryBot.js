@@ -171,7 +171,7 @@ exports.pdfSummaryBot = async (req, res) => {
                     role: item.role,
                     text: item.content[0]?.text?.value || ""
                 }));
-                
+
 
                 updateUserData = await checkToken(req.body.deviceId)
 
@@ -388,11 +388,10 @@ exports.pdfSummaryBot = async (req, res) => {
                         }
                     );
                     answerRes = answerRes.data
-
-                    const senMesFormatted = answerRes.data.filter(item => item.role === 'assistant').map(item => ({
-                        role: item.role,
-                        text: item.content[0]?.text?.value || ""
-                    }));
+                    const senMesFormatted = [{
+                        role: answerRes.data[0].role,
+                        text: answerRes.data[0]["content"][0]["text"]["value"] || ""
+                    }];
 
                     res.status(200).json({
                         data: {
