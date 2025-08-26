@@ -58,7 +58,7 @@ exports.planSubscribe = async (req, res) => {
                     const expireDate = moment(findUserDetails.expireDate);
                     const checkDate = expireDate.isAfter(currentDate)
 
-                    if (findUserDetails.reminToken == 0 || (!checkDate && findUserDetails.planType != "free")) {
+                    // if (findUserDetails.reminToken == 0 && checkDate == false && findUserDetails.planType == "free") {
                         const addDate = currentDate.add(1, findPlan.type)
                         const userTokenUpgrade = await User.update(
                             {
@@ -92,13 +92,14 @@ exports.planSubscribe = async (req, res) => {
                             metadata: "planUpgrade"
                         })
                         res.status(200).json({
-                            message: "Plan is Upgrade"
+                            message: "Plan is Upgrade",
+                            
                         })
-                    } else {
-                        res.status(400).json({
-                            message: "Current Plan is Runing"
-                        })
-                    }
+                    // } else {
+                    //     res.status(400).json({
+                    //         message: "Current Plan is Runing"
+                    //     })
+                    // }
                 }
             } else {
                 res.status(400).json({
