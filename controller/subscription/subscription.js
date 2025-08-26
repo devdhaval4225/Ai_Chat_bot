@@ -26,7 +26,7 @@ exports.planSubscribe = async (req, res) => {
                 }
             ]
         });
-        findUserDetails = findUserDetails.toJSON()
+        // findUserDetails = findUserDetails.toJSON()
 
         let findPlan
         if (req.body && req.body.planId) {
@@ -43,7 +43,7 @@ exports.planSubscribe = async (req, res) => {
             }
         }
 
-        const planUpdateType = req.body && req.body.isDown ? "planDown" : findUserDetails.plan.token < findPlan.token ? "planUpgrade" : "planDown"
+        const planUpdateType = req.body && req.body.isDown ? "planDown" : "planUpgrade"
 
         if (planUpdateType === "planUpgrade") {
 
