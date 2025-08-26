@@ -26,7 +26,10 @@ exports.planSubscribe = async (req, res) => {
                 }
             ]
         });
-        // findUserDetails = findUserDetails.toJSON()
+        findUserDetails = await User.findOne({
+            where: { deviceId: deviceId },
+        })
+        findUserDetails = findUserDetails.toJSON()
 
         let findPlan
         if (req.body && req.body.planId) {
