@@ -12,7 +12,7 @@ exports.login = async (req, res) => {
             where: { deviceId: deviceId }
         });
         if (findUser == null) {
-            const createUser = await User.create({ deviceId: deviceId, uniqueId: `UN${shortid.generate()}`, totalToken: 5, reminToken: 5, planType: "free" });
+            const createUser = await User.create({ deviceId: deviceId, uniqueId: `UN${shortid.generate()}`, totalToken: 5, reminToken: 5, planType: "Free-Plan" });
             findUser = await User.findOne({
                 where: { deviceId: deviceId }
             });
@@ -29,7 +29,7 @@ exports.login = async (req, res) => {
                     {
                         isSubscribe: checkDate ? findUser.isSubscribe : 0,
                         expireDate: checkDate ? findUser.expireDate : null,
-                        planType: checkDate ? findUser.planType : "free"
+                        planType: checkDate ? findUser.planType : "Free-Plan"
                     },
                     { where: { deviceId: deviceId } },
                 )

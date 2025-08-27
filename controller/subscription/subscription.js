@@ -66,7 +66,7 @@ exports.planSubscribe = async (req, res) => {
                             totalToken: findUserDetails.totalToken + findPlan.token,
                             isSubscribe: 1,
                             expireDate: addDate,
-                            planType: findPlan.type
+                            planType: findPlan.planSlug
                         },
                         { where: { deviceId: deviceId } },
                     )
@@ -128,7 +128,7 @@ exports.planSubscribe = async (req, res) => {
                     avalableToken = avalableToken < 0 ? 0 : avalableToken
 
                     const userTokenUpgrade = await User.update(
-                        { reminToken: avalableToken, isSubscribe: 0, expireDate: null, planType: 'free' },
+                        { reminToken: avalableToken, isSubscribe: 0, expireDate: null, planType: 'Free-Plan' },
                         { where: { deviceId: deviceId } },
                     );
 
