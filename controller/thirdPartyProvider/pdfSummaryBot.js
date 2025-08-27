@@ -17,12 +17,12 @@ exports.pdfSummaryBot = async (req, res) => {
         const userData = await checkToken(req.body.deviceId)
         const getMetadata = userData.metadata != null ? JSON.parse(userData.metadata) : {}
         let updateUserData
-        if (userData.reminToken == 0) {
-            res.status(400).json({
-                message: "Your Quota is Over"
-            })
-        } else {
-            if (req.body.type === "upload") {
+        if (req.body.type === "upload") {
+            if (userData.reminToken == 0) {
+                res.status(400).json({
+                    message: "Your Quota is Over"
+                })
+            } else {
                 try {
                     await reduceToken(req.body.deviceId, uniqueId, "Bot", "pdfSummaryBot-Upload", true)
                     // Pdf Upload
