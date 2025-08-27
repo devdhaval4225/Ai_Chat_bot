@@ -26,7 +26,7 @@ exports.reduceToken = async (deviceId, uniqueId, apiProvider, apiUseType, isThre
                     isSubscribe: checkDate ? findUser.isSubscribe : 0,
                     expireDate: expDate,
                     uniqueId: updatedUniqueId,
-                    planType: checkDate ? findUser.planType : "free",
+                    planType: checkDate ? findUser.planType : "Free-Plan",
                 },
                 {
                     where: {
