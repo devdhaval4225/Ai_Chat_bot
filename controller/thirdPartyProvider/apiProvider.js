@@ -15,7 +15,7 @@ exports.provider = async (req, res) => {
         let updateUserData
         // let apiSendUserDetails = pick(notusedToken, ['id', 'totalToken', 'usedToken', 'reminToken', 'planType', 'isSubscribe', 'expireDate']);
         const reminToken = notusedToken.reminToken
-        if (reminToken == 0) {
+        if (reminToken == 0 && !(apiProvider === "OpenAi" && body.filedObj.apiType === "chatCompletion")) {
             res.status(400).json({
                 message: "Your Quota is Over"
             })
@@ -23,7 +23,7 @@ exports.provider = async (req, res) => {
             if (apiProvider === "OpenAi") {
                 const { threadId, assistant_id, runId, messages, apiType, contents } = body.filedObj
                 let getMetadata = notusedToken.metadata != null ? JSON.parse(notusedToken.metadata) : {}
-                const getThredId = (getMetadata && getMetadata.filedObj && getMetadata.filedObj.threadId) === threadId ? false : true
+                const getThredId = (getMetadata && getMetadata.openAi) === threadId ? false : true
                 if (apiType === "createThread") {
                     try {
                         let createThread = await axios({
@@ -148,7 +148,11 @@ exports.provider = async (req, res) => {
 
                 }
                 if (apiType === "chatCompletion") {
-                    // await reduceToken(deviceId, uniqueId, apiProvider, apiType)
+                    if (getMetadata.openAi !== body.filedObj.threadId) {
+                        res.status(400).json({
+                            message: "Thread Id Missing"
+                        })
+                    }
                     if (body && body.filedObj && contents) {
 
                         const newContents = contents.map(obj => ({
@@ -275,7 +279,7 @@ exports.provider = async (req, res) => {
                             text: msg.content.parts.map((v) => v.text).join(",")
                         }))
                         updateUserData = await checkToken(deviceId)
-                        
+
                         const resChatCompletions = {
                             content: content,
                             userDetails: pick(updateUserData, ['id', 'totalToken', 'usedToken', 'reminToken', 'planType', 'isSubscribe', 'expireDate'])
