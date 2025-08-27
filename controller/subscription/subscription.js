@@ -55,8 +55,8 @@ exports.planSubscribe = async (req, res) => {
                     })
                 } else {
                     const currentDate = moment();
-                    const expireDate = moment(findUserDetails.expireDate);
-                    const checkDate = expireDate.isAfter(currentDate)
+                    // const expireDate = moment(findUserDetails.expireDate);
+                    // const checkDate = expireDate.isAfter(currentDate)
 
                     // if (findUserDetails.reminToken == 0 && checkDate == false && findUserDetails.planType == "free") {
                     const addDate = currentDate.add(1, findPlan.type)
