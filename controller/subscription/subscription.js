@@ -26,9 +26,6 @@ exports.planSubscribe = async (req, res) => {
                 }
             ]
         });
-        findUserDetails = await User.findOne({
-            where: { deviceId: deviceId },
-        })
         findUserDetails = findUserDetails.toJSON()
 
         let findPlan
@@ -131,7 +128,7 @@ exports.planSubscribe = async (req, res) => {
                     avalableToken = avalableToken < 0 ? 0 : avalableToken
 
                     const userTokenUpgrade = await User.update(
-                        { reminToken: avalableToken, isSubscribe: 0, expireDate: null, planType: null },
+                        { reminToken: avalableToken, isSubscribe: 0, expireDate: null, planType: 'free' },
                         { where: { deviceId: deviceId } },
                     );
 
