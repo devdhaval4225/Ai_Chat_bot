@@ -44,11 +44,11 @@ A Node.js API service for AI chat bots, supporting multiple AI providers.
 
 5. **Start the API service:**
    ```bash
-   npm start
+   npm run dev
    ```
    Or for production with PM2:
    ```bash
-   NODE_ENV=production pm2 start service.js --time --name "api"
+   pm2 start service.js --time --name "api"
    ```
 
 ## Environment Variables
@@ -56,7 +56,7 @@ A Node.js API service for AI chat bots, supporting multiple AI providers.
 See `.env.example` for all required variables:
 - `PORT`: API server port
 - `DB_USERNAME`, `DB_PASSWORD`, `DB_NAME`, `DB_HOST`, `DB_DIALECT`: MySQL connection
-- `SECRET_KEY`: JWT or session secret
+- `SECRET_KEY`: Internal and external Opration secret
 - `OPEN_AI_API_KEY`, `MISTRAL_AI_API_KEY`, `GEMINI_API_KEY`, `DEEPSEEK_API_KEY`: AI provider keys
 - `DAILY_LIMIT`: Daily usage limit per user
 
