@@ -1,8 +1,10 @@
 const User = require("../../model/user.model");
 const History = require("../../model/tokenhistory.model");
+const Subscription = require("../../model/subscription.model");
+const Plan = require("../../model/plan.model");
 const shortid = require('shortid');
 const moment = require("moment");
-const { Op, fn, col, where } = require("sequelize");
+const { Op, fn, col, where, literal } = require("sequelize");
 const { checkToken } = require("../../helper/common");
 
 
@@ -51,13 +53,28 @@ exports.login = async (req, res) => {
                 });
                 if (!lastEntry.length > 0) {
 
-                    await User.update(
-                        {
-                            totalToken: Number(findUser.totalToken) + Number(dailyLimit),
-                            reminToken: dailyLimit,
-                        },
-                        { where: { deviceId: deviceId } },
-                    )
+                    await User.hasOne(Plan, {
+                        foreignKey: 'planSlug',
+                        sourceKey: 'planType',
+                        constraints: false
+                    });
+                    let findUserDetails = await User.findOne({
+                        where: { deviceId: deviceId },
+                        include: [
+                            {
+                                model: Plan,
+                                required: true,
+                                on: literal('users.planType = plan.planSlug')
+                            }
+                        ]
+                    });
+                    findUserDetails = findUserDetails.toJSON()
+
+                    // Find Plan
+                    let findPlan = await Plan.findOne({
+                        where: { planId: `daily-L!M!T`, isActive: 1 },
+                    })
+                    findPlan = findPlan.toJSON()
 
                     // Create History 
                     await History.create({
@@ -68,6 +85,26 @@ exports.login = async (req, res) => {
                         reminToken: dailyLimit,
                         metadata: "dailyLimit"
                     })
+
+                    // Create Subscription History
+                    await Subscription.create({
+                        deviceId: deviceId,
+                        currentPlanId: findUserDetails.plan.planId,
+                        currentToken: findUserDetails.reminToken,
+                        newPlanId: findPlan.planId,
+                        newPlanToken: findPlan.token,
+                        isUpDown: "daliy",
+                        newRefreshToken: findPlan.token
+                    })
+
+                    await User.update(
+                        {
+                            totalToken: Number(findUser.totalToken) + Number(findPlan.token),
+                            reminToken: dailyLimit,
+                        },
+                        { where: { deviceId: deviceId } },
+                    )
+
                     const dailyFreshUserDetails = await checkToken(deviceId);
                     return res.status(200).json({
                         data: dailyFreshUserDetails
