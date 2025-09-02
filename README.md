@@ -37,12 +37,17 @@ A Node.js API service for AI chat bots, supporting multiple AI providers.
      ```
    - Edit `.env` with your database and API keys.
 
-4. **Run database migrations (if using Sequelize CLI):**
+4. **Run database migrations (if using CLI):**
    ```bash
-   npx sequelize-cli db:migrate
+   npx run migrate
    ```
 
-5. **Start the API service:**
+5. **Run database seeder (if using CLI):**
+   ```bash
+   npn run seed
+   ```
+
+6. **Start the API service:**
    ```bash
    npm run dev
    ```
