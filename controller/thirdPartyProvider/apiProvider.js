@@ -296,6 +296,54 @@ exports.provider = async (req, res) => {
                     }
                 }
             }
+
+            if (apiProvider === "deepSeek") {
+                const { apiType, contents } = body.filedObj
+                const newContents = contents.map(({ text, ...rest }) => ({
+                    ...rest,
+                    content: text
+                }));
+                if (apiType === "chatCompletion") {
+                    try {
+                        let chatCompletions = await axios({
+                            url: `https://api.deepseek.com/chat/completions`,
+                            method: 'post',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`,
+                            },
+                            data: {
+                                "model": "deepseek-reasoner",
+                                "messages": newContents,
+                                "stream": false
+
+                            }
+                        });
+                        await reduceToken(deviceId, uniqueId, apiProvider, apiType)
+
+                        chatCompletions = chatCompletions.data.choices.map(msg => ({
+                            role: msg.message.role,
+                            text: msg.message.content,
+                            reasoning_content: msg.message.reasoning_content,
+                        }))
+                        updateUserData = await checkToken(deviceId)
+
+                        const resChatCompletions = {
+                            content: chatCompletions,
+                            userDetails: pick(updateUserData, ['id', 'totalToken', 'usedToken', 'reminToken', 'planType', 'isSubscribe', 'expireDate'])
+                        }
+
+                        res.status(200).json({
+                            data: resChatCompletions
+                        })
+                    } catch (error) {
+                        console.log("--error---", error)
+                        res.status(400).json({
+                            message: "DeepSeek chat completion error",
+                        })
+                    }
+                }
+            }
         }
     } catch (error) {
         console.log(error);
