@@ -1,3 +1,66 @@
-# Ai Chat Bot
+# AI Chat Bot Clone
 
-* Api Service add :- NODE_ENV=production pm2 start service.js --time --name "api"
+A Node.js API service for AI chat bots, supporting multiple AI providers.
+
+## Features
+
+- REST API for chat bot interactions
+- Supports OpenAI, Mistral AI, Gemini, and DeepSeek
+- Daily usage limits
+- Sequelize ORM for MySQL database
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js (v16+ recommended)
+- MySQL server
+- npm
+
+### Installation
+
+1. **Clone the repository:**
+   ```bash
+   git clone <your-repo-url>
+   cd clone
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Configure environment variables:**
+   - Copy `.env.example` to `.env` and fill in your values:
+     ```bash
+     cp .env.example .env
+     ```
+   - Edit `.env` with your database and API keys.
+
+4. **Run database migrations (if using Sequelize CLI):**
+   ```bash
+   npx sequelize-cli db:migrate
+   ```
+
+5. **Start the API service:**
+   ```bash
+   npm start
+   ```
+   Or for production with PM2:
+   ```bash
+   NODE_ENV=production pm2 start service.js --time --name "api"
+   ```
+
+## Environment Variables
+
+See `.env.example` for all required variables:
+- `PORT`: API server port
+- `DB_USERNAME`, `DB_PASSWORD`, `DB_NAME`, `DB_HOST`, `DB_DIALECT`: MySQL connection
+- `SECRET_KEY`: JWT or session secret
+- `OPEN_AI_API_KEY`, `MISTRAL_AI_API_KEY`, `GEMINI_API_KEY`, `DEEPSEEK_API_KEY`: AI provider keys
+- `DAILY_LIMIT`: Daily usage limit per user
+
+## Usage
+
+- Send requests to the API endpoints as documented in your codebase.
+- Integrate with your frontend or other services.
