@@ -5,7 +5,7 @@ module.exports = {
   async up(queryInterface, Sequelize) {
     const planArr = [
       {
-        planId: `daily-L!/\/\!t`,
+        planId: `daily-L!M!T`,
         planName: "Daliy Limit",
         planSlug: "daliy-limit",
         token: 3,
