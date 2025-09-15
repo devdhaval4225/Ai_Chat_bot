@@ -10,7 +10,7 @@ exports.aiBot = async (req, res) => {
         const userDetails = await checkToken(req.body.deviceId)
         const apiSendUserDetails = pick(userDetails, ['id', 'totalToken', 'usedToken', 'reminToken', 'planType', 'isSubscribe', 'expireDate']);
 
-        await reduceToken(deviceId, uniqueId, "Bot", type, true)
+        // await reduceToken(deviceId, uniqueId, "Bot", type, true)
 
         if (threadId && role && content) {
             if (type === "summarizerBot") {
