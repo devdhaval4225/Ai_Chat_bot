@@ -2,6 +2,7 @@ const axios = require("axios");
 const { checkToken, reduceToken } = require("../../helper/common");
 const User = require("../../model/user.model");
 const { _, pick, omit } = require("lodash")
+const crypto = require("crypto");
 
 exports.provider = async (req, res) => {
     try {
@@ -20,9 +21,11 @@ exports.provider = async (req, res) => {
                 message: "Your Quota is Over"
             })
         } else {
+
+            let getMetadata = notusedToken.metadata != null ? JSON.parse(notusedToken.metadata) : {}
+
             if (apiProvider === "OpenAi") {
                 const { threadId, assistant_id, runId, messages, apiType, contents } = body.filedObj
-                let getMetadata = notusedToken.metadata != null ? JSON.parse(notusedToken.metadata) : {}
                 const getThredId = (getMetadata && getMetadata.openAi) === threadId ? false : true
                 if (apiType === "createThread") {
                     try {
@@ -208,14 +211,39 @@ exports.provider = async (req, res) => {
 
             if (apiProvider === "MistralAi") {
                 const { apiType, messages, contents } = body.filedObj
-                await reduceToken(deviceId, uniqueId, apiProvider, apiType)
 
-                const newContents = contents.map(({ text, ...rest }) => ({
-                    ...rest,
-                    content: text
-                }));
+                if (apiType === "createThread") {
+                    await reduceToken(deviceId, uniqueId, apiProvider, apiType, true)
+
+                    updateUserData = await checkToken(deviceId)
+                    const createMistalAi = {
+                        id: `mistral_${crypto.randomBytes(10).toString('hex')}`,
+                        userDetails: pick(updateUserData, ['id', 'totalToken', 'usedToken', 'reminToken', 'planType', 'isSubscribe', 'expireDate'])
+                    }
+                    getMetadata["mistralAi"] = createMistalAi.id
+
+                    await User.update(
+                        { metadata: JSON.stringify(getMetadata) },
+                        { where: { deviceId: deviceId } }
+                    );
+
+                    res.status(200).json({
+                        data: createMistalAi
+                    })
+                }
 
                 if (apiType === "chatCompletion") {
+                    if (getMetadata.mistralAi !== body.filedObj.threadId) {
+                        res.status(400).json({
+                            message: "Thread Id Missing"
+                        })
+                    }
+
+                    const newContents = contents.map(({ text, ...rest }) => ({
+                        ...rest,
+                        content: text
+                    }));
+
                     try {
                         let chatCompletions = await axios({
                             url: 'https://api.mistral.ai/v1/chat/completions',
@@ -254,14 +282,43 @@ exports.provider = async (req, res) => {
 
             if (apiProvider === "Gemini") {
                 const { apiType, contents } = body.filedObj
-                const createNewArray = contents.map(item => ({
-                    role: item.role,
-                    parts: [
-                        { text: item.text || "" }
-                    ]
-                }));
-                await reduceToken(deviceId, uniqueId, apiProvider, apiType)
+
+                if (apiType === "createThread") {
+                    await reduceToken(deviceId, uniqueId, apiProvider, apiType, true)
+
+                    updateUserData = await checkToken(deviceId)
+                    const createGeminiThred = {
+                        id: `gemini_${crypto.randomBytes(10).toString('hex')}`,
+                        userDetails: pick(updateUserData, ['id', 'totalToken', 'usedToken', 'reminToken', 'planType', 'isSubscribe', 'expireDate'])
+                    }
+
+                    getMetadata["geminiId"] = createGeminiThred.id
+
+                    await User.update(
+                        { metadata: JSON.stringify(getMetadata) },
+                        { where: { deviceId: deviceId } }
+                    );
+
+                    res.status(200).json({
+                        data: createGeminiThred
+                    })
+                }
+
+
                 if (apiType === "chatCompletion") {
+
+                    if (getMetadata.geminiId !== body.filedObj.threadId) {
+                        res.status(400).json({
+                            message: "Thread Id Missing"
+                        })
+                    }
+                    const createNewArray = contents.map(item => ({
+                        role: item.role,
+                        parts: [
+                            { text: item.text || "" }
+                        ]
+                    }));
+
                     try {
                         let chatCompletions = await axios({
                             url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
@@ -290,20 +347,57 @@ exports.provider = async (req, res) => {
                         })
                     } catch (error) {
                         console.log("--error---", error)
-                        res.status(400).json({
-                            message: "Gemini chat completion error",
-                        })
+                        if (error.response.data.error.code === 503) {
+                            res.status(503).json({
+                                message: "The model is overloaded. Please try again later.",
+                            })
+                        } else {
+                            res.status(400).json({
+                                message: "Gemini chat completion error",
+                            })
+                        }
                     }
                 }
             }
 
             if (apiProvider === "deepSeek") {
                 const { apiType, contents } = body.filedObj
-                const newContents = contents.map(({ text, ...rest }) => ({
-                    ...rest,
-                    content: text
-                }));
+
+                if (apiType === "createThread") {
+                    await reduceToken(deviceId, uniqueId, apiProvider, apiType, true)
+
+                    updateUserData = await checkToken(deviceId)
+                    const createdeepThread = {
+                        id: `deepSeek_${crypto.randomBytes(8).toString('hex')}`,
+                        userDetails: pick(updateUserData, ['id', 'totalToken', 'usedToken', 'reminToken', 'planType', 'isSubscribe', 'expireDate'])
+                    }
+
+                    getMetadata["deepSeekId"] = createdeepThread.id
+
+                    await User.update(
+                        { metadata: JSON.stringify(getMetadata) },
+                        { where: { deviceId: deviceId } }
+                    );
+
+                    res.status(200).json({
+                        data: createdeepThread
+                    })
+                }
+
+
                 if (apiType === "chatCompletion") {
+
+                    if (getMetadata.deepSeekId !== body.filedObj.threadId) {
+                        res.status(400).json({
+                            message: "Thread Id Missing"
+                        })
+                    }
+
+                    const newContents = contents.map(({ text, ...rest }) => ({
+                        ...rest,
+                        content: text
+                    }));
+
                     try {
                         let chatCompletions = await axios({
                             url: `https://api.deepseek.com/chat/completions`,
@@ -319,7 +413,7 @@ exports.provider = async (req, res) => {
 
                             }
                         });
-                        await reduceToken(deviceId, uniqueId, apiProvider, apiType)
+                        // await reduceToken(deviceId, uniqueId, apiProvider, apiType)
 
                         chatCompletions = chatCompletions.data.choices.map(msg => ({
                             role: msg.message.role,
