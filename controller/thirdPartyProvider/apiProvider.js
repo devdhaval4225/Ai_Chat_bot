@@ -208,7 +208,7 @@ exports.provider = async (req, res) => {
 
             if (apiProvider === "MistralAi") {
                 const { apiType, messages, contents } = body.filedObj
-                await reduceToken(deviceId, uniqueId, apiProvider, apiType, true)
+                await reduceToken(deviceId, uniqueId, apiProvider, apiType)
 
                 const newContents = contents.map(({ text, ...rest }) => ({
                     ...rest,
@@ -260,7 +260,7 @@ exports.provider = async (req, res) => {
                         { text: item.text || "" }
                     ]
                 }));
-                await reduceToken(deviceId, uniqueId, apiProvider, apiType, true)
+                await reduceToken(deviceId, uniqueId, apiProvider, apiType)
                 if (apiType === "chatCompletion") {
                     try {
                         let chatCompletions = await axios({
@@ -319,7 +319,7 @@ exports.provider = async (req, res) => {
 
                             }
                         });
-                        await reduceToken(deviceId, uniqueId, apiProvider, apiType, true)
+                        await reduceToken(deviceId, uniqueId, apiProvider, apiType)
 
                         chatCompletions = chatCompletions.data.choices.map(msg => ({
                             role: msg.message.role,
