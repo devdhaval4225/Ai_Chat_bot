@@ -274,7 +274,7 @@ exports.provider = async (req, res) => {
                     } catch (error) {
                         console.log("---error--", error.response.data)
                         res.status(400).json({
-                            message: "Mistral chat completions erorr",
+                            message: error.response.data.message,
                         })
                     }
                 }
