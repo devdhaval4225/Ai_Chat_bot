@@ -16,7 +16,7 @@ exports.provider = async (req, res) => {
         let updateUserData
         // let apiSendUserDetails = pick(notusedToken, ['id', 'totalToken', 'usedToken', 'reminToken', 'planType', 'isSubscribe', 'expireDate']);
         const reminToken = notusedToken.reminToken
-        if (reminToken == 0 && !(apiProvider === "OpenAi" && body.filedObj.apiType === "chatCompletion")) {
+        if (reminToken == 0 && !(body.filedObj.apiType === "chatCompletion")) {
             res.status(400).json({
                 message: "Your Quota is Over"
             })
