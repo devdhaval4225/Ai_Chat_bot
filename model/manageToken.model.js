@@ -13,6 +13,14 @@ const TokenModel =   sequelize.define('manageModelToken', {
       token: {
         allowNull: false,
         type: DataTypes.STRING
+      },      
+      subscribe_model: {
+        allowNull: false,
+        type: DataTypes.STRING
+      },
+      subscribe_token: {
+        allowNull: false,
+        type: DataTypes.STRING
       },
       type: {
         allowNull: false,

@@ -40,7 +40,7 @@ exports.provider = async (req, res) => {
                             url: 'https://api.openai.com/v1/threads',
                             method: 'post',
                             headers: {
-                                Authorization: `Bearer ${openAiToken.token}`,
+                                Authorization: `Bearer ${notusedToken.isSubscribe == 1 ? openAiToken.subscribe_token : openAiToken.token}`,
                                 'OpenAI-Beta': 'assistants=v2',
                                 'Content-Type': 'application/json'
                             }
@@ -62,9 +62,9 @@ exports.provider = async (req, res) => {
                             data: createThread
                         })
                     } catch (error) {
-                        console.log("--error--", error)
+                        // console.log("--error--", error)
                         res.status(400).json({
-                            message: "Openai Create Thread Erorr"
+                            message: error.response.data.error.message
                         })
                     }
                 }
@@ -83,7 +83,7 @@ exports.provider = async (req, res) => {
                                 url: `https://api.openai.com/v1/threads/${threadId}/runs`,
                                 method: 'post',
                                 headers: {
-                                    Authorization: `Bearer ${openAiToken.token}`,
+                                    Authorization: `Bearer ${notusedToken.isSubscribe == 1 ? openAiToken.subscribe_token : openAiToken.token}`,
                                     'OpenAI-Beta': 'assistants=v2',
                                     'Content-Type': 'application/json'
                                 },
@@ -132,7 +132,7 @@ exports.provider = async (req, res) => {
                                 url: `https://api.openai.com/v1/threads/${threadId}/runs/${runId}`,
                                 method: 'get',
                                 headers: {
-                                    Authorization: `Bearer ${openAiToken.token}`,
+                                    Authorization: `Bearer ${notusedToken.isSubscribe == 1 ? openAiToken.subscribe_token : openAiToken.token}`,
                                     'OpenAI-Beta': 'assistants=v2',
                                     'Content-Type': 'application/json'
                                 },
@@ -175,11 +175,11 @@ exports.provider = async (req, res) => {
                                 url: `https://api.openai.com/v1/chat/completions`,
                                 method: 'post',
                                 headers: {
-                                    Authorization: `Bearer ${openAichatCompletionToken.token}`,
+                                    Authorization: `Bearer ${notusedToken.isSubscribe == 1 ? openAichatCompletionToken.subscribe_token : openAichatCompletionToken.token}`,
                                     'Content-Type': 'application/json'
                                 },
                                 data: {
-                                    "model": openAichatCompletionToken.model,
+                                    "model": notusedToken.isSubscribe == 1 ? openAichatCompletionToken.subscribe_model : openAichatCompletionToken.model,
                                     messages: newContents,
                                 }
                             });
@@ -256,12 +256,12 @@ exports.provider = async (req, res) => {
                             url: 'https://api.mistral.ai/v1/chat/completions',
                             method: 'post',
                             headers: {
-                                'Authorization': `Bearer ${mistralAiToken.token}`,
+                                'Authorization': `Bearer ${notusedToken.isSubscribe == 1 ? mistralAiToken.subscribe_token : mistralAiToken.token}`,
                                 'Content-Type': 'application/json',
                                 'Accept': 'application/json'
                             },
                             data: {
-                                "model": mistralAiToken.model,
+                                "model": notusedToken.isSubscribe == 1 ? mistralAiToken.subscribe_model : mistralAiToken.model,
                                 "messages": newContents,
                                 "temperature": 0.7,
                                 "max_tokens": 256
@@ -328,7 +328,7 @@ exports.provider = async (req, res) => {
 
                     try {
                         let chatCompletions = await axios({
-                            url: `https://generativelanguage.googleapis.com/v1beta/models/${geminiToken.model}:generateContent?key=${geminiToken.token}`,
+                            url: `https://generativelanguage.googleapis.com/v1/models/${notusedToken.isSubscribe == 1 ? geminiToken.subscribe_model : geminiToken.model}:generateContent?key=${notusedToken.isSubscribe == 1 ? geminiToken.subscribe_token : geminiToken.token}`,
                             method: 'post',
                             headers: {
                                 'Accept': 'application/json',
@@ -414,10 +414,10 @@ exports.provider = async (req, res) => {
                             method: 'post',
                             headers: {
                                 'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${deepSeekToken.token}`,
+                                'Authorization': `Bearer ${notusedToken.isSubscribe == 1 ? deepSeekToken.subscribe_token : deepSeekToken.token}`,
                             },
                             data: {
-                                "model": deepSeekToken.model,
+                                "model": notusedToken.isSubscribe == 1 ? deepSeekToken.subscribe_model : deepSeekToken.model,
                                 "messages": newContents,
                                 "stream": false
 
@@ -443,7 +443,7 @@ exports.provider = async (req, res) => {
                     } catch (error) {
                         console.log("--error---", error)
                         res.status(400).json({
-                            message: "DeepSeek chat completion error",
+                            message: error.response.data.message,
                         })
                     }
                 }

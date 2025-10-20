@@ -61,7 +61,7 @@ exports.pdfSummaryBot = async (req, res) => {
                     let fileUpload = await axios.post('https://api.openai.com/v1/files', form, {
                         headers: {
                             ...form.getHeaders(),
-                            Authorization: `Bearer ${openAiPdfToken.token}`,
+                            Authorization: `Bearer ${userData.isSubscribe == 1 ? openAiPdfToken.subscribe_token : openAiPdfToken.token}`,
                         },
                     });
                     fileUpload = fileUpload.data
@@ -73,7 +73,7 @@ exports.pdfSummaryBot = async (req, res) => {
                         {},
                         {
                             headers: {
-                                Authorization: `Bearer ${openAiPdfToken.token}`,
+                                Authorization: `Bearer ${userData.isSubscribe == 1 ? openAiPdfToken.subscribe_token : openAiPdfToken.token}`,
                                 'OpenAI-Beta': 'assistants=v2',
                                 'Content-Type': 'application/json',
                             },
@@ -88,7 +88,7 @@ exports.pdfSummaryBot = async (req, res) => {
                         url: `https://api.openai.com/v1/threads/${threadUploadId}/messages`,
                         method: 'post',
                         headers: {
-                            'Authorization': `Bearer ${openAiPdfToken.token}`,
+                            'Authorization': `Bearer ${userData.isSubscribe == 1 ? openAiPdfToken.subscribe_token : openAiPdfToken.token}`,
                             'OpenAI-Beta': 'assistants=v2'
                         },
                         data: {
@@ -113,7 +113,7 @@ exports.pdfSummaryBot = async (req, res) => {
                         },
                         {
                             headers: {
-                                Authorization: `Bearer ${openAiPdfToken.token}`,
+                                Authorization: `Bearer ${userData.isSubscribe == 1 ? openAiPdfToken.subscribe_token : openAiPdfToken.token}`,
                                 'OpenAI-Beta': 'assistants=v2',
                                 'Content-Type': 'application/json',
                             },
@@ -131,7 +131,7 @@ exports.pdfSummaryBot = async (req, res) => {
                                 `https://api.openai.com/v1/threads/${threadUploadId}/runs/${runUploadId}`,
                                 {
                                     headers: {
-                                        Authorization: `Bearer ${openAiPdfToken.token}`,
+                                        Authorization: `Bearer ${userData.isSubscribe == 1 ? openAiPdfToken.subscribe_token : openAiPdfToken.token}`,
                                         'OpenAI-Beta': 'assistants=v2',
                                         'Content-Type': 'application/json'
                                     },
@@ -168,7 +168,7 @@ exports.pdfSummaryBot = async (req, res) => {
                         `https://api.openai.com/v1/threads/${threadUploadId}/messages`,
                         {
                             headers: {
-                                Authorization: `Bearer ${openAiPdfToken.token}`,
+                                Authorization: `Bearer ${userData.isSubscribe == 1 ? openAiPdfToken.subscribe_token : openAiPdfToken.token}`,
                                 'OpenAI-Beta': 'assistants=v2',
                                 'Content-Type': 'application/json'
                             },
@@ -323,7 +323,7 @@ exports.pdfSummaryBot = async (req, res) => {
                         url: `https://api.openai.com/v1/threads/${body.threadId}/messages`,
                         method: 'post',
                         headers: {
-                            'Authorization': `Bearer ${openAiPdfToken.token}`,
+                            'Authorization': `Bearer ${userData.isSubscribe == 1 ? openAiPdfToken.subscribe_token : openAiPdfToken.token}`,
                             'OpenAI-Beta': 'assistants=v2'
                         },
                         data: {
@@ -344,7 +344,7 @@ exports.pdfSummaryBot = async (req, res) => {
                         },
                         {
                             headers: {
-                                Authorization: `Bearer ${openAiPdfToken.token}`,
+                                Authorization: `Bearer ${userData.isSubscribe == 1 ? openAiPdfToken.subscribe_token : openAiPdfToken.token}`,
                                 'OpenAI-Beta': 'assistants=v2',
                                 'Content-Type': 'application/json',
                             },
@@ -360,7 +360,7 @@ exports.pdfSummaryBot = async (req, res) => {
                                 `https://api.openai.com/v1/threads/${body.threadId}/runs/${runUploadId}`,
                                 {
                                     headers: {
-                                        Authorization: `Bearer ${openAiPdfToken.token}`,
+                                        Authorization: `Bearer ${userData.isSubscribe == 1 ? openAiPdfToken.subscribe_token : openAiPdfToken.token}`,
                                         'OpenAI-Beta': 'assistants=v2',
                                         'Content-Type': 'application/json'
                                     },
@@ -390,7 +390,7 @@ exports.pdfSummaryBot = async (req, res) => {
                         `https://api.openai.com/v1/threads/${body.threadId}/messages`,
                         {
                             headers: {
-                                Authorization: `Bearer ${openAiPdfToken.token}`,
+                                Authorization: `Bearer ${userData.isSubscribe == 1 ? openAiPdfToken.subscribe_token : openAiPdfToken.token}`,
                                 'OpenAI-Beta': 'assistants=v2',
                                 'Content-Type': 'application/json'
                             },
@@ -415,7 +415,7 @@ exports.pdfSummaryBot = async (req, res) => {
                         `https://api.openai.com/v1/threads/${body.threadId}/messages`,
                         {
                             headers: {
-                                Authorization: `Bearer ${openAiPdfToken.token}`,
+                                Authorization: `Bearer ${userData.isSubscribe == 1 ? openAiPdfToken.subscribe_token : openAiPdfToken.token}`,
                                 'OpenAI-Beta': 'assistants=v2',
                                 'Content-Type': 'application/json'
                             },

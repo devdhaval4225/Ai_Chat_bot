@@ -22,7 +22,7 @@ exports.aiBot = async (req, res) => {
                     url: `https://api.openai.com/v1/threads/${threadId}/messages`,
                     method: 'post',
                     headers: {
-                        Authorization: `Bearer ${summarizerBotToken.token}`,
+                        Authorization: `Bearer ${apiSendUserDetails.isSubscribe == 1 ? summarizerBotToken.subscribe_token : summarizerBotToken.token}`,
                         'OpenAI-Beta': 'assistants=v2',
                         'Content-Type': 'application/json'
                     },
@@ -49,7 +49,7 @@ exports.aiBot = async (req, res) => {
                     url: `https://api.openai.com/v1/threads/${threadId}/messages`,
                     method: 'post',
                     headers: {
-                        Authorization: `Bearer ${spellCheckerBotToken.token}`,
+                        Authorization: `Bearer ${apiSendUserDetails.isSubscribe == 1 ? spellCheckerBotToken.subscribe_token : spellCheckerBotToken.token}`,
                         'OpenAI-Beta': 'assistants=v2',
                         'Content-Type': 'application/json'
                     },
