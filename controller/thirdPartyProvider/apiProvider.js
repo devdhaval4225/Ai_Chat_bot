@@ -171,6 +171,7 @@ exports.provider = async (req, res) => {
                         }));
 
                         try {
+                            console.log("----notusedToken.isSubscribe == 1 ? openAichatCompletionToken.subscribe_token : openAichatCompletionToken.token-----",notusedToken.isSubscribe == 1 ? openAichatCompletionToken.subscribe_token : openAichatCompletionToken.token)
                             let getRunStatus = await axios({
                                 url: `https://api.openai.com/v1/chat/completions`,
                                 method: 'post',

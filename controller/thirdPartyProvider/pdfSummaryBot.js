@@ -148,10 +148,9 @@ exports.pdfSummaryBot = async (req, res) => {
                                 return;
                             }
                         } catch (error) {
-                            console.log("---error--", error);
-                            res.status(500).json({
-                                message: "Error polling run status",
-                                status: 500
+                            res.status(400).json({
+                                message: error.response.data.error.message,
+                                status: 400
                             });
                             return;
                         }
@@ -197,9 +196,9 @@ exports.pdfSummaryBot = async (req, res) => {
                     });
                 } catch (error) {
                     console.log(error);
-                    res.status(500).json({
-                        message: "Something went wrong",
-                        status: 500
+                    res.status(400).json({
+                        message: error.response.data.error.message,
+                        status: 400
                     })
 
                     fs.rm(req.file.path, { recursive: true, force: true }, (err) => {
@@ -223,100 +222,6 @@ exports.pdfSummaryBot = async (req, res) => {
                 const checkFileAndThred = (getMetadata && getMetadata.pdfObj && getMetadata.pdfObj) &&
                     body.threadId === getMetadata.pdfObj.threadId &&
                     body.fileId === getMetadata.pdfObj.fileId
-
-                // if (checkFileAndThred === false) {
-                //     getMetadata["pdfObj"] = { threadId: body.threadId, fileId: body.fileId }
-                //     await User.update(
-                //         { metadata: JSON.stringify(getMetadata) },
-                //         { where: { deviceId: body.deviceId } }
-                //     );
-                //     await reduceToken(body.deviceId, uniqueId, "Bot", "pdfSummaryBot-Run")
-                // }
-
-
-                // const runRes = await axios.post(
-                //     `https://api.openai.com/v1/threads/${body.threadId}/runs`,
-                //     {
-                //         assistant_id: assistantId,
-                //     },
-                //     {
-                //         headers: {
-                //             Authorization: `Bearer ${process.env.OPEN_AI_API_KEY}`,
-                //             'OpenAI-Beta': 'assistants=v2',
-                //             'Content-Type': 'application/json',
-                //         },
-                //     }
-                // );
-                // const runUploadId = runRes.data.id;
-
-
-                // ✅ Poll run status
-                // let runStatus = 'queued';
-                // while (runStatus !== 'completed') {
-                //     await new Promise((resolve) => setTimeout(resolve, 1000));
-
-                //     try {
-                //         const pollRes = await axios.get(
-                //             `https://api.openai.com/v1/threads/${body.threadId}/runs/${runUploadId}`,
-                //             {
-                //                 headers: {
-                //                     Authorization: `Bearer ${process.env.OPEN_AI_API_KEY}`,
-                //                     'OpenAI-Beta': 'assistants=v2',
-                //                     'Content-Type': 'application/json'
-                //                 },
-                //             }
-                //         );
-
-                //         runStatus = pollRes.data.status;
-                //         console.log("--runStatus---", runStatus)
-                //         if (runStatus === 'failed' || runStatus === 'cancelled') {
-                //             console.log("======runStatus======", runStatus)
-                //             res.status(400).json({
-                //                 message: `Run ${runStatus}`,
-                //                 status: 400
-                //             })
-                //             console.log("-=-=-=-=-=-=pollRes.data-=-==-", pollRes.data)
-                //             return;
-                //         }
-                //     } catch (error) {
-                //         console.log("---error--", error);
-                //         res.status(500).json({
-                //             message: "Error polling run status",
-                //             status: 500
-                //         });
-                //         return;
-                //     }
-                // }
-
-
-
-
-
-                // // Thread in send Message and find attachments 
-                // let sendMessageResponse = await axios({
-                //     url: `https://api.openai.com/v1/threads/${body.threadId}/messages`,
-                //     method: 'post',
-                //     headers: {
-                //         'Authorization': `Bearer ${process.env.OPEN_AI_API_KEY}`,
-                //         'OpenAI-Beta': 'assistants=v2'
-                //     },
-                //     data: {
-                //         role: 'user',
-                //         content: body.text,
-                //         attachments: [
-                //             {
-                //                 file_id: body.fileId,
-                //                 tools: [{ type: 'file_search' }],
-                //             },
-                //         ],
-                //     }
-
-                // })
-                // sendMessageResponse = sendMessageResponse.data
-
-
-                // ✅ Get final answer
-
 
                 if (body.text) {
                     let sendMessage = await axios({
@@ -378,9 +283,9 @@ exports.pdfSummaryBot = async (req, res) => {
                             }
                         } catch (error) {
                             console.log("---error--", error);
-                            res.status(500).json({
-                                message: "Error polling run status",
-                                status: 500
+                            res.status(400).json({
+                                message: error.response.data.error.message,
+                                status: 400
                             });
                             return;
                         }
@@ -438,10 +343,9 @@ exports.pdfSummaryBot = async (req, res) => {
                 }
             } catch (error) {
                 console.log(error.response);
-
-                res.status(500).json({
-                    message: "Something went wrong",
-                    status: 500
+                res.status(400).json({
+                    message:error.response.data.error.message,
+                    status: 400
                 })
             }
         }
