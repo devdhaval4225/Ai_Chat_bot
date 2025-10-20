@@ -18,7 +18,8 @@ exports.aiBot = async (req, res) => {
 
         if (threadId && role && content) {
             if (type === "summarizerBot") {
-                let runSummari = await axios({
+                try {
+                    let runSummari = await axios({
                     url: `https://api.openai.com/v1/threads/${threadId}/messages`,
                     method: 'post',
                     headers: {
@@ -30,22 +31,28 @@ exports.aiBot = async (req, res) => {
                         role: role,
                         content: content
                     }
-                });
+                    });
 
-                const pickRunSummari = pick(runSummari.data, ['id', 'content'])
-                pickRunSummari.content = pickRunSummari.content.map(c => ({ text: pick(c.text, ['value']), type: c.type }));
-                runSummari = pickRunSummari
+                    const pickRunSummari = pick(runSummari.data, ['id', 'content'])
+                    pickRunSummari.content = pickRunSummari.content.map(c => ({ text: pick(c.text, ['value']), type: c.type }));
+                    runSummari = pickRunSummari
 
-                runSummari["userDetails"] = apiSendUserDetails
+                    runSummari["userDetails"] = apiSendUserDetails
 
-                res.status(200).json({
-                    data: runSummari
-                })
+                    res.status(200).json({
+                        data: runSummari
+                    })
+                } catch (error) {
+                    res.status(400).json({
+                        message: error.response.data.error.message
+                    })
+                }
 
             }
 
             if (type === "spellCheckerBot") {
-                let runSpellChecker = await axios({
+                try {
+                    let runSpellChecker = await axios({
                     url: `https://api.openai.com/v1/threads/${threadId}/messages`,
                     method: 'post',
                     headers: {
@@ -57,16 +64,21 @@ exports.aiBot = async (req, res) => {
                         role: role,
                         content: content
                     }
-                });
+                    });
 
-                const pickSpellChecker = pick(runSpellChecker.data, ['id', 'content'])
-                pickSpellChecker.content = pickSpellChecker.content.map(c => ({ text: pick(c.text, ['value']), type: c.type }));
-                runSpellChecker = pickSpellChecker
-                runSpellChecker["userDetails"] = apiSendUserDetails
+                    const pickSpellChecker = pick(runSpellChecker.data, ['id', 'content'])
+                    pickSpellChecker.content = pickSpellChecker.content.map(c => ({ text: pick(c.text, ['value']), type: c.type }));
+                    runSpellChecker = pickSpellChecker
+                    runSpellChecker["userDetails"] = apiSendUserDetails
 
-                res.status(200).json({
-                    data: runSpellChecker
-                })
+                    res.status(200).json({
+                        data: runSpellChecker
+                    })
+                } catch (error) {
+                    res.status(400).json({
+                        message: error.response.data.error.message
+                    })
+                }
             }
 
         } else {

@@ -103,7 +103,7 @@ exports.provider = async (req, res) => {
                         } catch (error) {
                             // console.log("Thread Run Error",error);
                             res.status(400).json({
-                                message: "Thread Run Error"
+                                message: error.response.data.error.message
                             })
                         }
 
@@ -146,7 +146,7 @@ exports.provider = async (req, res) => {
                             })
                         } catch (error) {
                             res.status(400).json({
-                                message: "Get Thread Run Error"
+                                message: error.response.data.error.message
                             })
                         }
 
@@ -201,9 +201,9 @@ exports.provider = async (req, res) => {
                                 data: chatComRes
                             })
                         } catch (error) {
-                            console.log("Chat Completion Error", error.response.data);
+                            console.log("Chat Completion Error", error.response.data.error.message);
                             res.status(400).json({
-                                message: "Open ai Chat Completion Error"
+                                message: error.response.data.error.message
                             })
                         }
 
@@ -363,7 +363,7 @@ exports.provider = async (req, res) => {
                             })
                         } else {
                             res.status(400).json({
-                                message: "Gemini chat completion error",
+                                message: error.response.data.error.message,
                             })
                         }
                     }
