@@ -23,6 +23,7 @@ const subscription = require("./routes/subscription.routes");
 app.use("/api/user", userRoutes)
 app.use("/api/thirdparty", thirdPartyProvidor)
 app.use("/api/plan", subscription)
+app.use("/api/manage", require("./routes/manageToken.routes"))
 
 app.listen(port, () => {
     console.log(`Server Running At PORT : ${port}`);

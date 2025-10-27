@@ -2,8 +2,7 @@ const axios = require("axios");
 const { checkToken, reduceToken } = require("../../helper/common");
 const { pick } = require("lodash");
 const { getToken } = require("../../config/manageToken");
-const summary_Ass_ID = "asst_8XphHk5hHVolGxVPfMkQqf5i"
-const spell_Ass_ID = "asst_Yshc3HmPy5zJuCbTAcjze0r1"
+
 
 // type
 //     summarizerBot
@@ -13,6 +12,9 @@ exports.aiBot = async (req, res) => {
     try {
         const summarizerBotToken = await getToken('openAi-summarizerBot');
         const spellCheckerBotToken = await getToken('openAi-spellCheckerBot');
+
+        const summary_Ass_ID = JSON.parse(summarizerBotToken.metadata).assId
+        const spell_Ass_ID = JSON.parse(spellCheckerBotToken.metadata).assId
         
         const { type, threadId, role, content, message, deviceId } = req.body;
         const header = req.headers
@@ -155,6 +157,7 @@ exports.aiBot = async (req, res) => {
 
 
     } catch (error) {
+        console.log("---error---",error)
         res.status(500).json({
             message: "Something went wrong",
             status: 500
