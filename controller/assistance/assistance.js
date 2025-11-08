@@ -5,34 +5,23 @@ const Assistant = require("../../model/assistanceModel");
 
 exports.assistanceProvider = async (req, res) => {
     try {
-        const openAiToken = await getToken('openAi');
-        const findAllAssistant = await Assistant.findAll({
+        const id = req.params.id
+        const findAllAssistant = await Assistant.findOne({
             where: {
-                isActive: 1
-            }
-        });
-
-        res.status(200).json({
-            data: findAllAssistant
-        })
-    } catch (error) {
-        console.log("---error---", error)
-        res.status(500).json({
-            message: "Something went wrong",
-            status: 500
-        })
-    }
-};
-
-exports.assistanceViaCategory = async (req, res) => {
-    try {
-        const findAllAssistant = await Assistant.findAll({
-            where: {
-                isActive: 1
+                isActive: 1,
+                id: id
             },
-            group: ['category']
+            attributes: [
+                'id',
+                'nameAssistant',
+                'category',
+                'imageUrl',
+                'tier',
+                'isLatestFeatures',
+                'isMostFavorite',
+                'question',
+            ],
         });
-
 
         res.status(200).json({
             data: findAllAssistant

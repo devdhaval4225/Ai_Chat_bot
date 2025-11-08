@@ -1,10 +1,12 @@
 const router = require('express').Router();
-// const {middAuth} = require("../middleware/auth");
-const { tokenAndModel } = require("../controller/assistance/assistance");
-const { updateToken } = require("../controller/manageTokens/update");
+const { middAuth } = require("../middleware/auth");
+const { assistanceProvider } = require("../controller/assistance/assistance");
+const { assistanceViaCategory } = require("../controller/assistance/assistanceViaCategory");
+const { runAssi } = require("../controller/assistance/runAssitant");
 
 
-router.post('/gettokens',tokenAndModel);
-router.post('/updatetokens',updateToken);
+router.get('/getcategoory/:id', assistanceProvider);
+router.get('/categoory', assistanceViaCategory);
+router.post('/runassi', middAuth, runAssi);
 
 module.exports = router;

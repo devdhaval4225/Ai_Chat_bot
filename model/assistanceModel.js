@@ -1,4 +1,5 @@
-// src/v1/models/assistant.model.js
+const { DataTypes } = require('sequelize');
+const sequelize = require('../db/connection');
 
 const AssistantModel = sequelize.define('assistant', {
   id: {
