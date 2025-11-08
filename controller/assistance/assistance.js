@@ -2,6 +2,7 @@ const { checkToken, reduceToken } = require("../../helper/common");
 const { pick } = require("lodash");
 const { getToken } = require("../../config/manageToken");
 const Assistant = require("../../model/assistanceModel");
+const { Sequelize } = require("sequelize");
 
 exports.assistanceProvider = async (req, res) => {
     try {
@@ -19,7 +20,7 @@ exports.assistanceProvider = async (req, res) => {
                 'tier',
                 'isLatestFeatures',
                 'isMostFavorite',
-                'question',
+                [Sequelize.literal("JSON_EXTRACT(question, '$')"), 'question']
             ],
         });
 
