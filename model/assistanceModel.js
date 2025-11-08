@@ -8,6 +8,10 @@ const AssistantModel = sequelize.define('assistant', {
     autoIncrement: true,
     primaryKey: true,
   },
+  hashId: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
   nameAssistant: {
     type: DataTypes.STRING,
     allowNull: false,

@@ -7,6 +7,6 @@ const { runAssi } = require("../controller/assistance/runAssitant");
 
 router.get('/getcategoory/:id', assistanceProvider);
 router.get('/categoory', assistanceViaCategory);
-router.post('/runassi', middAuth, runAssi);
+router.post('/runassi/:id', middAuth, runAssi);
 
 module.exports = router;

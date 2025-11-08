@@ -3,30 +3,36 @@ const { checkToken, reduceToken } = require("../../helper/common");
 const { pick } = require("lodash");
 const { getToken } = require("../../config/manageToken");
 const Assistant = require("../../model/assistanceModel");
+const { encrypt, decrypt } = require("../../common/commonFunction");
 
 
 exports.runAssi = async (req, res) => {
     try {
         const openAi = await getToken('openAi');
         const id = req.params.id
-        return id
-        // const findAssi = await Assistant.findOne({
-        //     where: {
-        //         isActive: 1,
-        //         assistantId: id
+        console.log("------req.params------", id)
+        const deHash = await decrypt(id);
+        const findAssi = await Assistant.findOne({
+            where: {
+                isActive: 1,
+                id: id
 
-        //     }
-        // })
+            }
+        })
+        if (findAssi.dataValues != null) {
+            res.status(400).json({
+                message: "Assistant Not Found"
+            })
+        }
 
-        // const { threadId, role, content, message, deviceId } = req.body;
-        // const header = req.headers
-        // const userDetails = await checkToken(req.body.deviceId)
-        // const apiSendUserDetails = pick(userDetails, ['id', 'totalToken', 'usedToken', 'reminToken', 'planType', 'isSubscribe', 'expireDate']);
+        const { threadId, role, content } = req.body;
+        const userDetails = await checkToken(req.body.deviceId)
+        const apiSendUserDetails = pick(userDetails, ['id', 'totalToken', 'usedToken', 'reminToken', 'planType', 'isSubscribe', 'expireDate']);
 
-        // // await reduceToken(deviceId, uniqueId, "Bot", type, true)
+        // await reduceToken(deviceId, uniqueId, "Bot", type, true)
 
         // if (threadId && role && content) {
-        //     const assistantId = findAssi.assistantId
+        //     const assistantId = findAssi.dataValues.assistantId
         //     try {
         //         const newSummriRes = {}
         //         let runSummari = await axios({
