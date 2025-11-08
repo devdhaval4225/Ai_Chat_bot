@@ -170,8 +170,9 @@ exports.provider = async (req, res) => {
                             content: obj.text,
                         }));
 
+                        // const checkStatus = await checkModeration(contents[0]["text"], `Bearer ${notusedToken.isSubscribe == 1 ? openAichatCompletionToken.subscribe_token : openAichatCompletionToken.token}`);
+
                         try {
-                            console.log("----notusedToken.isSubscribe == 1 ? openAichatCompletionToken.subscribe_token : openAichatCompletionToken.token-----",notusedToken.isSubscribe == 1 ? openAichatCompletionToken.subscribe_token : openAichatCompletionToken.token)
                             let getRunStatus = await axios({
                                 url: `https://api.openai.com/v1/chat/completions`,
                                 method: 'post',
@@ -358,9 +359,9 @@ exports.provider = async (req, res) => {
                             res.status(503).json({
                                 message: "The model is overloaded. Please try again later.",
                             })
-                        } else if(error.response.data.error.code === 404) {
+                        } else if (error.response.data.error.code === 404) {
                             res.status(400).json({
-                                message:error.response.data.error.message,
+                                message: error.response.data.error.message,
                             })
                         } else {
                             res.status(400).json({
@@ -458,3 +459,27 @@ exports.provider = async (req, res) => {
         })
     }
 };
+
+
+
+// const checkModeration = async (text, token) => {
+//     try {
+//         const response = await axios.post(
+//             "https://api.openai.com/v1/moderations",
+//             {
+//                 model: "omni-moderation-latest",
+//                 input: text
+//             },
+//             {
+//                 headers: {
+//                     "Content-Type": "application/json",
+//                     Authorization: token,
+//                 },
+//             }
+//         );
+
+//         console.log("Moderation result:", response.data.results);
+//     } catch (error) {
+//         console.error("Error running moderation:", error.response?.data || error.message);
+//     }
+// }
