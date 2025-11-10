@@ -11,6 +11,7 @@ exports.assistanceViaCategory = async (req, res) => {
             where: { isActive: 1 },
             attributes: [
                 'id',
+                'hashId',
                 'nameAssistant',
                 'category',
                 'imageUrl',

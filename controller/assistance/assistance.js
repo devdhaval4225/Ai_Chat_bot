@@ -14,6 +14,7 @@ exports.assistanceProvider = async (req, res) => {
             },
             attributes: [
                 'id',
+                'hashId',
                 'nameAssistant',
                 'category',
                 'imageUrl',

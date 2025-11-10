@@ -12,7 +12,6 @@ exports.runAssi = async (req, res) => {
             where: {
                 isActive: 1,
                 hashId: id
-
             }
         })
         const { threadId, role, contents } = req.body;
