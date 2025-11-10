@@ -18,6 +18,7 @@ exports.assistanceViaCategory = async (req, res) => {
                 'isLatestFeatures',
                 'isMostFavorite',
                 'isActive',
+                'isHomeScreen',
             ],
             order: [['category', 'ASC'], ['id', 'ASC']], // optional sorting
             raw: true,
