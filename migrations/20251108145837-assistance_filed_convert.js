@@ -11,13 +11,13 @@ module.exports = {
 
       for (let i = 0; i < assistants.length; i++) {
         const id = assistants[i]["id"]
-        const hashId = "asst_" + await uniqueNumber();
-        await queryInterface.bulkUpdate(
-          'assistant',
-          { hashId: hashId },
-          { id: id }
+        const hashId = `asst_${Math.floor(Math.random() * 1000000)}`
+        await queryInterface.sequelize.query(
+          `UPDATE assistant SET \`hashId\` = :hashId WHERE id = :id`,
+          {
+            replacements: { hashId, id },
+          }
         );
-
       }
     } catch (error) {
       console.log("---error----", error)
