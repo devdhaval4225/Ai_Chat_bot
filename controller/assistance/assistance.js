@@ -22,7 +22,7 @@ exports.assistanceProvider = async (req, res) => {
                 'isLatestFeatures',
                 'isMostFavorite',
                 'isHomeScreen',
-                [Sequelize.literal("JSON_EXTRACT(question, '$')"), 'question']
+                'question'
             ],
         });
 
