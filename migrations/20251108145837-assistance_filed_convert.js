@@ -7,15 +7,19 @@ module.exports = {
   async up(queryInterface, Sequelize) {
 
     try {
-      const [assistants] = await queryInterface.sequelize.query(`SELECT id FROM assistant`);
+      const [assistants] = await queryInterface.sequelize.query(`SELECT * FROM assistant`);
 
       for (let i = 0; i < assistants.length; i++) {
         const id = assistants[i]["id"]
         const hashId = `asst_${Math.floor(Math.random() * 1000000)}`
+        const Arr = Object.values(JSON.parse(assistants[i]["question"]))
+        let newArr = Arr.filter((v) => v !== "")
+        const question = newArr.length > 0 ? JSON.stringify(newArr) : null
+
         await queryInterface.sequelize.query(
-          `UPDATE assistant SET \`hashId\` = :hashId WHERE id = :id`,
+          `UPDATE assistant SET \`hashId\` = :hashId, \`question\` = :question WHERE id = :id`,
           {
-            replacements: { hashId, id },
+            replacements: { hashId, question, id },
           }
         );
       }
