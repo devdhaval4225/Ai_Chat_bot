@@ -42,6 +42,11 @@ const AssistantModel = sequelize.define('assistant', {
     allowNull: false,
     defaultValue: 1,
   },
+  isHomeScreen: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 1,
+  },
   question: {
     type: DataTypes.TEXT,
     allowNull: false,
