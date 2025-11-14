@@ -4,6 +4,7 @@ const User = require("../../model/user.model");
 const { _, pick, omit } = require("lodash")
 const crypto = require("crypto");
 const { getToken } = require("../../config/manageToken");
+const commonFunction = require("../../common/commonFunction");
 
 exports.provider = async (req, res) => {
     try {
@@ -165,12 +166,20 @@ exports.provider = async (req, res) => {
                     }
                     if (body && body.filedObj && contents) {
 
+
+                    for (const item of contents) {
+                        const checkStatus = await commonFunction.checkModeration(item.text);
+                        if (checkStatus) {
+                          return res.status(400).json({
+                            message: "Might contain sensitive content.",
+                          });
+                        }
+                    }
                         const newContents = contents.map(obj => ({
                             ...obj,
                             content: obj.text,
                         }));
 
-                        // const checkStatus = await checkModeration(contents[0]["text"], `Bearer ${notusedToken.isSubscribe == 1 ? openAichatCompletionToken.subscribe_token : openAichatCompletionToken.token}`);
 
                         try {
                             let getRunStatus = await axios({
@@ -248,6 +257,15 @@ exports.provider = async (req, res) => {
                         })
                     }
 
+                    for (const item of contents) {
+                        const checkStatus = await commonFunction.checkModeration(item.text);
+                        if (checkStatus) {
+                          return res.status(400).json({
+                            message: "Might contain sensitive content.",
+                          });
+                        }
+                    }
+
                     const newContents = contents.map(({ text, ...rest }) => ({
                         ...rest,
                         content: text
@@ -320,6 +338,15 @@ exports.provider = async (req, res) => {
                         res.status(400).json({
                             message: "Thread Id Missing"
                         })
+                    }
+
+                    for (const item of contents) {
+                        const checkStatus = await commonFunction.checkModeration(item.text);
+                        if (checkStatus) {
+                          return res.status(400).json({
+                            message: "Might contain sensitive content.",
+                          });
+                        }
                     }
                     const createNewArray = contents.map(item => ({
                         role: item.role,
@@ -405,6 +432,15 @@ exports.provider = async (req, res) => {
                         })
                     }
 
+                    for (const item of contents) {
+                        const checkStatus = await commonFunction.checkModeration(item.text);
+                        if (checkStatus) {
+                          return res.status(400).json({
+                            message: "Might contain sensitive content.",
+                          });
+                        }
+                    }
+
                     const newContents = contents.map(({ text, ...rest }) => ({
                         ...rest,
                         content: text
@@ -459,27 +495,3 @@ exports.provider = async (req, res) => {
         })
     }
 };
-
-
-
-// const checkModeration = async (text, token) => {
-//     try {
-//         const response = await axios.post(
-//             "https://api.openai.com/v1/moderations",
-//             {
-//                 model: "omni-moderation-latest",
-//                 input: text
-//             },
-//             {
-//                 headers: {
-//                     "Content-Type": "application/json",
-//                     Authorization: token,
-//                 },
-//             }
-//         );
-
-//         console.log("Moderation result:", response.data.results);
-//     } catch (error) {
-//         console.error("Error running moderation:", error.response?.data || error.message);
-//     }
-// }

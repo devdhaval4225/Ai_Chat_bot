@@ -1,5 +1,6 @@
 const CryptoJS = require("crypto-js");
-
+const axios = require("axios");
+const { getToken } = require("../config/manageToken");
 
 exports.uniqueNumber = async (type) => {
     const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -27,7 +28,40 @@ exports.encrypt = async (text) => {
 };
 
 exports.decrypt = async (text) => {
-    const bytes  = await CryptoJS.AES.decrypt(text, process.env.SECRET_KEY);
+    const bytes = await CryptoJS.AES.decrypt(text, process.env.SECRET_KEY);
     const originalText = await bytes.toString(CryptoJS.enc.Utf8);
     return originalText;
 };
+
+exports.checkModeration = async (text) => {
+    try {
+        const openAiToken = await getToken('openAi');
+        const token = openAiToken.token
+        const response = await axios.post(
+            "https://api.openai.com/v1/moderations",
+            {
+                model: "omni-moderation-latest",
+                input: text
+            },
+            {
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+            }
+        );
+        let flagged = response.data.results[0].flagged == false
+        if (flagged) {
+            if (Number(response.data.results[0]["category_scores"]["sexual"].toFixed(2)) >= 0.3) {
+                flagged = true
+            } else {
+                flagged = false
+            }
+        } else {
+            flagged = true;
+        }
+        return flagged;
+    } catch (error) {
+        console.error("Error running moderation:", error.response?.data || error.message);
+    }
+}

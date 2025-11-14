@@ -25,6 +25,14 @@ exports.aiBot = async (req, res) => {
         // await reduceToken(deviceId, uniqueId, "Bot", type, true)
 
         if (threadId && role && content) {
+            for (const item of content) {
+                const checkStatus = await commonFunction.checkModeration(item.text);
+                if (checkStatus) {
+                  return res.status(400).json({
+                    message: "Might contain sensitive content.",
+                  });
+                }
+            }
             const assistantId = type === "summarizerBot" ? summary_Ass_ID : spell_Ass_ID
             try {
                 const newSummriRes = {}
