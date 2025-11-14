@@ -45,8 +45,12 @@ exports.runAssi = async (req, res) => {
                     });
                 }
             }
-
-            const newContents = body.filedObj.contents.map(({ ...rest }) => ({
+            const updated = body.filedObj.contents.map(obj => {
+                const newObj = { ...obj };
+                if ("role" in newObj) delete newObj.role;
+                return newObj;
+            });
+            const newContents = updated.map(({ ...rest }) => ({
                 ...rest,
                 type: "text"
             }));
@@ -91,7 +95,7 @@ exports.runAssi = async (req, res) => {
                         }
                     );
                 } catch (error) {
-                    console.log("---error.response---",error)
+                    console.log("---error.response---", error)
                     res.status(400).json({
                         message: error.response.data.error.message,
                         status: 400
