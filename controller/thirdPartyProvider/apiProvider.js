@@ -171,7 +171,9 @@ exports.provider = async (req, res) => {
                         const checkStatus = await commonFunction.checkModeration(item.text);
                         if (checkStatus) {
                           return res.status(400).json({
-                            message: "Might contain sensitive content.",
+                            message: `A "${item.text}" might refer to content that is explicit, sexual, or involves descriptions of nudity. However, sharing or promoting such text is often inappropriate and may violate community guidelines, moral standards, and even laws in some cases.
+
+If you're using the term in a different context, could you please provide more details to help me better understand what you mean?`
                           });
                         }
                     }
@@ -261,7 +263,9 @@ exports.provider = async (req, res) => {
                         const checkStatus = await commonFunction.checkModeration(item.text);
                         if (checkStatus) {
                           return res.status(400).json({
-                            message: "Might contain sensitive content.",
+                            message: `A "${item.text}" might refer to content that is explicit, sexual, or involves descriptions of nudity. However, sharing or promoting such text is often inappropriate and may violate community guidelines, moral standards, and even laws in some cases.
+
+If you're using the term in a different context, could you please provide more details to help me better understand what you mean?`
                           });
                         }
                     }
@@ -344,7 +348,9 @@ exports.provider = async (req, res) => {
                         const checkStatus = await commonFunction.checkModeration(item.text);
                         if (checkStatus) {
                           return res.status(400).json({
-                            message: "Might contain sensitive content.",
+                            message: `A "${item.text}" might refer to content that is explicit, sexual, or involves descriptions of nudity. However, sharing or promoting such text is often inappropriate and may violate community guidelines, moral standards, and even laws in some cases.
+
+If you're using the term in a different context, could you please provide more details to help me better understand what you mean?`
                           });
                         }
                     }
@@ -436,7 +442,9 @@ exports.provider = async (req, res) => {
                         const checkStatus = await commonFunction.checkModeration(item.text);
                         if (checkStatus) {
                           return res.status(400).json({
-                            message: "Might contain sensitive content.",
+                            message: `A "${item.text}" might refer to content that is explicit, sexual, or involves descriptions of nudity. However, sharing or promoting such text is often inappropriate and may violate community guidelines, moral standards, and even laws in some cases.
+
+If you're using the term in a different context, could you please provide more details to help me better understand what you mean?`
                           });
                         }
                     }

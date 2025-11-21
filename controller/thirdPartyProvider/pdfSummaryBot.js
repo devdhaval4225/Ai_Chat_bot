@@ -83,12 +83,12 @@ exports.pdfSummaryBot = async (req, res) => {
                     createThread = createThread.data
                     const threadUploadId = createThread.id
 
-                    const checkStatus = await commonFunction.checkModeration(req.body.text);
-                    if (checkStatus) {
-                      return res.status(400).json({
-                        message: "Might contain sensitive content.",
-                      });
-                    }
+                    // const checkStatus = await commonFunction.checkModeration(req.body.text);
+                    // if (checkStatus) {
+                    //   return res.status(400).json({
+                    //     message: "Might contain sensitive content.",
+                    //   });
+                    // }
 
                     // Thread in send Message and find attachments 
                     let sendMessageResponse = await axios({
@@ -225,12 +225,12 @@ exports.pdfSummaryBot = async (req, res) => {
 
             try {
                 const body = req.body
-                    const checkStatus = await commonFunction.checkModeration(body.text);
-                    if (checkStatus) {
-                        return res.status(400).json({
-                          message: "Might contain sensitive content.",
-                        });
-                    }
+                    // const checkStatus = await commonFunction.checkModeration(body.text);
+                    // if (checkStatus) {
+                    //     return res.status(400).json({
+                    //       message: "Might contain sensitive content.",
+                    //     });
+                    // }
 
                 const checkFileAndThred = (getMetadata && getMetadata.pdfObj && getMetadata.pdfObj) &&
                     body.threadId === getMetadata.pdfObj.threadId &&
