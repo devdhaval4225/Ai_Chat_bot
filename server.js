@@ -7,7 +7,7 @@ const cookiesParser = require("cookie-parser");
 
 const port = process.env.PORT || 8000;
 
-app.use(cors());
+app.use(cors({ origin: "*"}));
 app.use(cookiesParser());
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
@@ -25,6 +25,7 @@ app.use("/api/thirdparty", thirdPartyProvidor)
 app.use("/api/plan", subscription)
 app.use("/api/manage", require("./routes/manageToken.routes"))
 app.use("/api/assi", require("./routes/assistant.routes"))
+app.use("/api/aiModel", require("./routes/aimodel.routes"))
 
 app.listen(port, () => {
     console.log(`Server Running At PORT : ${port}`);
