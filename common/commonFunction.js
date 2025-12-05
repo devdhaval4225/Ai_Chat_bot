@@ -1,6 +1,6 @@
 const CryptoJS = require("crypto-js");
 const axios = require("axios");
-const { getToken } = require("../config/manageToken");
+const { getToken, getModelToken } = require("../config/manageToken");
 
 exports.uniqueNumber = async (type) => {
     const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -35,8 +35,10 @@ exports.decrypt = async (text) => {
 
 exports.checkModeration = async (text) => {
     try {
-        const openAiToken = await getToken('openAi');
-        const token = openAiToken.token
+        const modelTokens = await getModelToken("openAi");
+
+        // const openAiToken = await getToken('openAi');
+        const token = modelTokens.token
         const response = await axios.post(
             "https://api.openai.com/v1/moderations",
             {
