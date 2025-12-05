@@ -72,6 +72,16 @@ const AssistantModel = sequelize.define('assistant', {
       }
     },
   },
+  model: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    defaultValue: "gpt-4o-mini",
+  },
+  reduceToken: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 1,
+  },
   isActive: {
     type: DataTypes.INTEGER,
     allowNull: false,

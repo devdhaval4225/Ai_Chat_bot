@@ -60,6 +60,16 @@ const AiToolModel = sequelize.define('aiTool', {
       }
     },
   },
+  model: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    defaultValue: "gpt-4o-mini",
+  },
+  reduceToken: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 1,
+  },
   metadata: {
     type: DataTypes.TEXT,
     allowNull: true,

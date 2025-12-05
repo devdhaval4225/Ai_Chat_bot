@@ -4,7 +4,7 @@ const { Sequelize, QueryTypes } = require('sequelize');
 const CryptoJS = require("crypto-js");
 const moment = require("moment");
 
-exports.reduceToken = async (deviceId, uniqueId, apiProvider, apiUseType, isThred = false) => {
+exports.reduceToken = async (deviceId, uniqueId, apiProvider, apiUseType, isThred = false, rToken) => {
     try {
         const findUser = await this.checkToken(deviceId);
         const userUniqueId = findUser.uniqueId
@@ -19,10 +19,15 @@ exports.reduceToken = async (deviceId, uniqueId, apiProvider, apiUseType, isThre
             const expireDate = moment(findUser.expireDate);
             const checkDate = expireDate.isAfter(currentDate)
 
+            const decrementAmount = rToken ? rToken : 1
+            if (findUser.reminToken < decrementAmount) {
+                return true;
+            }
+
             const newTokenData = await User.update(
                 {
-                    reminToken: Sequelize.literal('reminToken - 1'),
-                    usedToken: Sequelize.literal('usedToken + 1'),
+                    reminToken: Sequelize.literal(`GREATEST(reminToken - ${decrementAmount}, 0)`),
+                    usedToken: Sequelize.literal(`usedToken + ${decrementAmount}`),
                     isSubscribe: checkDate ? findUser.isSubscribe : 0,
                     expireDate: expDate,
                     uniqueId: updatedUniqueId,

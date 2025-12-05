@@ -3,12 +3,12 @@ const fs = require('fs');
 const FormData = require('form-data');
 const axios = require("axios");
 const { reduceToken } = require("../../helper/common");
-const assistantId = "asst_pHnxNwc9yrNq3njeFL0bnAgG"
 const { _, pick } = require("lodash")
 const { checkToken } = require("../../helper/common");
 const User = require("../..//model/user.model");
-const { getToken } = require("../../config/manageToken");
+const { getToken, getModelToken } = require("../../config/manageToken");
 const commonFunction = require("../../common/commonFunction");
+const AiTool = require("../../model/aitoolModel");
 
 
 
@@ -22,6 +22,24 @@ exports.pdfSummaryBot = async (req, res) => {
 
         const openAiPdfToken = await getToken('openAiPdf');
 
+        let assistantId
+        let rToken
+        let modelTokens = await getModelToken("openAi");
+        const hashId = req.body.hashId
+        if (!hashId) {
+            assistantId = "asst_pHnxNwc9yrNq3njeFL0bnAgG"
+        } else {
+            const findAssistantId = await AiTool.findOne({
+                where: { isActive: 1, hashId: hashId },
+                attributes: ["assistantId", "model", "reduceToken"]
+            });
+            assistantId = findAssistantId?.assistantId
+            modelTokens = await getModelToken("openAi", findAssistantId.dataValues.model);
+            rToken = findAssistantId.dataValues.reduceToken
+        }
+
+        const token = userData.isSubscribe == 1 ? modelTokens.proToken : modelTokens.token
+
         if (req.body.type === "upload") {
             if (userData.reminToken == 0) {
                 res.status(400).json({
@@ -29,7 +47,12 @@ exports.pdfSummaryBot = async (req, res) => {
                 })
             } else {
                 try {
-                    await reduceToken(req.body.deviceId, uniqueId, "Bot", "pdfSummaryBot-Upload", true)
+                    const result = await reduceToken(req.body.deviceId, uniqueId, "Bot", "pdfSummaryBot-Upload", true, rToken)
+                    if (result) {
+                        res.status(400).json({
+                            message: "Your Quota is Over"
+                        })
+                    }
                     // Pdf Upload
                     const fileExtName = path.extname(req.file.originalname).toLowerCase()
                     const mimeType = [".pdf"]
@@ -62,7 +85,7 @@ exports.pdfSummaryBot = async (req, res) => {
                     let fileUpload = await axios.post('https://api.openai.com/v1/files', form, {
                         headers: {
                             ...form.getHeaders(),
-                            Authorization: `Bearer ${userData.isSubscribe == 1 ? openAiPdfToken.subscribe_token : openAiPdfToken.token}`,
+                            Authorization: `Bearer ${token}`,
                         },
                     });
                     fileUpload = fileUpload.data
@@ -74,7 +97,7 @@ exports.pdfSummaryBot = async (req, res) => {
                         {},
                         {
                             headers: {
-                                Authorization: `Bearer ${userData.isSubscribe == 1 ? openAiPdfToken.subscribe_token : openAiPdfToken.token}`,
+                                Authorization: `Bearer ${token}`,
                                 'OpenAI-Beta': 'assistants=v2',
                                 'Content-Type': 'application/json',
                             },
@@ -95,7 +118,7 @@ exports.pdfSummaryBot = async (req, res) => {
                         url: `https://api.openai.com/v1/threads/${threadUploadId}/messages`,
                         method: 'post',
                         headers: {
-                            'Authorization': `Bearer ${userData.isSubscribe == 1 ? openAiPdfToken.subscribe_token : openAiPdfToken.token}`,
+                            'Authorization': `Bearer ${token}`,
                             'OpenAI-Beta': 'assistants=v2'
                         },
                         data: {
@@ -120,7 +143,7 @@ exports.pdfSummaryBot = async (req, res) => {
                         },
                         {
                             headers: {
-                                Authorization: `Bearer ${userData.isSubscribe == 1 ? openAiPdfToken.subscribe_token : openAiPdfToken.token}`,
+                                Authorization: `Bearer ${token}`,
                                 'OpenAI-Beta': 'assistants=v2',
                                 'Content-Type': 'application/json',
                             },
@@ -138,7 +161,7 @@ exports.pdfSummaryBot = async (req, res) => {
                                 `https://api.openai.com/v1/threads/${threadUploadId}/runs/${runUploadId}`,
                                 {
                                     headers: {
-                                        Authorization: `Bearer ${userData.isSubscribe == 1 ? openAiPdfToken.subscribe_token : openAiPdfToken.token}`,
+                                        Authorization: `Bearer ${token}`,
                                         'OpenAI-Beta': 'assistants=v2',
                                         'Content-Type': 'application/json'
                                     },
@@ -146,8 +169,8 @@ exports.pdfSummaryBot = async (req, res) => {
                             );
 
                             runStatus = pollRes.data.status;
-                            console.log("--runStatus---", runStatus)
                             if (runStatus === 'failed' || runStatus === 'cancelled') {
+                                console.log("--runStatus---", runStatus)
                                 res.status(400).json({
                                     message: `Run ${runStatus}`,
                                     status: 400
@@ -174,7 +197,7 @@ exports.pdfSummaryBot = async (req, res) => {
                         `https://api.openai.com/v1/threads/${threadUploadId}/messages`,
                         {
                             headers: {
-                                Authorization: `Bearer ${userData.isSubscribe == 1 ? openAiPdfToken.subscribe_token : openAiPdfToken.token}`,
+                                Authorization: `Bearer ${token}`,
                                 'OpenAI-Beta': 'assistants=v2',
                                 'Content-Type': 'application/json'
                             },
@@ -225,12 +248,12 @@ exports.pdfSummaryBot = async (req, res) => {
 
             try {
                 const body = req.body
-                    // const checkStatus = await commonFunction.checkModeration(body.text);
-                    // if (checkStatus) {
-                    //     return res.status(400).json({
-                    //       message: "Might contain sensitive content.",
-                    //     });
-                    // }
+                // const checkStatus = await commonFunction.checkModeration(body.text);
+                // if (checkStatus) {
+                //     return res.status(400).json({
+                //       message: "Might contain sensitive content.",
+                //     });
+                // }
 
                 const checkFileAndThred = (getMetadata && getMetadata.pdfObj && getMetadata.pdfObj) &&
                     body.threadId === getMetadata.pdfObj.threadId &&
@@ -241,7 +264,7 @@ exports.pdfSummaryBot = async (req, res) => {
                         url: `https://api.openai.com/v1/threads/${body.threadId}/messages`,
                         method: 'post',
                         headers: {
-                            'Authorization': `Bearer ${userData.isSubscribe == 1 ? openAiPdfToken.subscribe_token : openAiPdfToken.token}`,
+                            'Authorization': `Bearer ${token}`,
                             'OpenAI-Beta': 'assistants=v2'
                         },
                         data: {
@@ -262,7 +285,7 @@ exports.pdfSummaryBot = async (req, res) => {
                         },
                         {
                             headers: {
-                                Authorization: `Bearer ${userData.isSubscribe == 1 ? openAiPdfToken.subscribe_token : openAiPdfToken.token}`,
+                                Authorization: `Bearer ${token}`,
                                 'OpenAI-Beta': 'assistants=v2',
                                 'Content-Type': 'application/json',
                             },
@@ -278,7 +301,7 @@ exports.pdfSummaryBot = async (req, res) => {
                                 `https://api.openai.com/v1/threads/${body.threadId}/runs/${runUploadId}`,
                                 {
                                     headers: {
-                                        Authorization: `Bearer ${userData.isSubscribe == 1 ? openAiPdfToken.subscribe_token : openAiPdfToken.token}`,
+                                        Authorization: `Bearer ${token}`,
                                         'OpenAI-Beta': 'assistants=v2',
                                         'Content-Type': 'application/json'
                                     },
@@ -308,7 +331,7 @@ exports.pdfSummaryBot = async (req, res) => {
                         `https://api.openai.com/v1/threads/${body.threadId}/messages`,
                         {
                             headers: {
-                                Authorization: `Bearer ${userData.isSubscribe == 1 ? openAiPdfToken.subscribe_token : openAiPdfToken.token}`,
+                                Authorization: `Bearer ${token}`,
                                 'OpenAI-Beta': 'assistants=v2',
                                 'Content-Type': 'application/json'
                             },
@@ -333,7 +356,7 @@ exports.pdfSummaryBot = async (req, res) => {
                         `https://api.openai.com/v1/threads/${body.threadId}/messages`,
                         {
                             headers: {
-                                Authorization: `Bearer ${userData.isSubscribe == 1 ? openAiPdfToken.subscribe_token : openAiPdfToken.token}`,
+                                Authorization: `Bearer ${token}`,
                                 'OpenAI-Beta': 'assistants=v2',
                                 'Content-Type': 'application/json'
                             },
@@ -357,7 +380,7 @@ exports.pdfSummaryBot = async (req, res) => {
             } catch (error) {
                 console.log(error.response);
                 res.status(400).json({
-                    message:error.response.data.error.message,
+                    message: error.response.data.error.message,
                     status: 400
                 })
             }

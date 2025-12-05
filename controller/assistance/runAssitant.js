@@ -1,7 +1,7 @@
 const axios = require("axios");
 const { checkToken, reduceToken } = require("../../helper/common");
 const { pick } = require("lodash");
-const { getToken } = require("../../config/manageToken");
+const { getToken, getModelToken } = require("../../config/manageToken");
 const AssistantModel = require("../../model/assistanceModel");
 const commonFunction = require("../../common/commonFunction");
 
@@ -25,7 +25,11 @@ exports.runAssi = async (req, res) => {
                 message: "Assistant Not Found"
             })
         }
+
+        const modelTokens = await getModelToken("openAi", findAssi.dataValues.model);
         const assistantId = findAssi.dataValues.assistantId
+        const token = apiSendUserDetails.isSubscribe == 1 ? modelTokens.proToken : modelTokens.token
+        
         const filedObj = body && body.filedObj ? body.filedObj : {}
 
 
@@ -64,7 +68,7 @@ If you're using the term in a different context, could you please provide more d
                         url: `https://api.openai.com/v1/threads/${filedObj.threadId}/messages`,
                         method: 'post',
                         headers: {
-                            Authorization: `Bearer ${openAi.token}`,
+                            Authorization: `Bearer ${token}`,
                             'OpenAI-Beta': 'assistants=v2',
                             'Content-Type': 'application/json'
                         },
@@ -90,7 +94,7 @@ If you're using the term in a different context, could you please provide more d
                         },
                         {
                             headers: {
-                                Authorization: `Bearer ${openAi.token}`,
+                                Authorization: `Bearer ${token}`,
                                 'OpenAI-Beta': 'assistants=v2',
                                 'Content-Type': 'application/json',
                             },
@@ -115,7 +119,7 @@ If you're using the term in a different context, could you please provide more d
                             `https://api.openai.com/v1/threads/${filedObj.threadId}/runs/${runId}`,
                             {
                                 headers: {
-                                    Authorization: `Bearer ${openAi.token}`,
+                                    Authorization: `Bearer ${token}`,
                                     'OpenAI-Beta': 'assistants=v2',
                                     'Content-Type': 'application/json'
                                 },
@@ -143,7 +147,7 @@ If you're using the term in a different context, could you please provide more d
                     `https://api.openai.com/v1/threads/${filedObj.threadId}/messages`,
                     {
                         headers: {
-                            Authorization: `Bearer ${openAi.token}`,
+                            Authorization: `Bearer ${token}`,
                             'OpenAI-Beta': 'assistants=v2',
                             'Content-Type': 'application/json'
                         },

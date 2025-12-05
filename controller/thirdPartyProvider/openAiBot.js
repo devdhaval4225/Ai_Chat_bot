@@ -18,16 +18,22 @@ exports.aiBot = async (req, res) => {
         const summary_Ass_ID = JSON.parse(summarizerBotToken.metadata).assId
         const spell_Ass_ID = JSON.parse(spellCheckerBotToken.metadata).assId
 
-        const { type, threadId, role, content, message, deviceId, id } = req.body;
+        const { type, role, content, message, deviceId, id } = req.body;
+        let threadId = req.body && req.body.threadId ? req.body.threadId : "";
         const header = req.headers
         const uniqueId = header['uniqueid'];
         const userDetails = await checkToken(req.body.deviceId)
         const apiSendUserDetails = pick(userDetails, ['id', 'totalToken', 'usedToken', 'reminToken', 'planType', 'isSubscribe', 'expireDate']);
 
-        // await reduceToken(deviceId, uniqueId, "Bot", type, true)
+        const result = await reduceToken(deviceId, uniqueId, "Bot", type, true,)
+        if (result) {
+            res.status(400).json({
+                message: "Your Quota is Over"
+            })
+        }
 
-        if (threadId && role && content) {
-            
+        if (role && content) {
+
             for (const item of content) {
                 const checkStatus = await commonFunction.checkModeration(item.text);
                 if (checkStatus) {
@@ -49,11 +55,31 @@ If you're using the term in a different context, could you please provide more d
                     attributes: ["assistantId", "model"]
                 });
                 assistantId = findAssistantId?.assistantId
-                console.log("---findAssistantId?.token----",findAssistantId?.token)
                 modelTokens = await getModelToken("openAi", findAssistantId?.token);
             }
+
             const token = apiSendUserDetails.isSubscribe == 1 ? modelTokens.proToken : modelTokens.token
+
+            // Run Assitant Ai Tool
             try {
+
+                // Create Thread
+                if (!threadId) {
+                    let createThread = await axios({
+                        url: 'https://api.openai.com/v1/threads',
+                        method: 'post',
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                            'OpenAI-Beta': 'assistants=v2',
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    const pickThredData = pick(createThread.data, 'id')
+                    threadId = pickThredData.id
+                } else {
+                    threadId = threadId
+                }
+
                 const newSummriRes = {}
                 let runSummari = await axios({
                     url: `https://api.openai.com/v1/threads/${threadId}/messages`,
@@ -102,8 +128,8 @@ If you're using the term in a different context, could you please provide more d
                         );
 
                         runStatus = pollRes.data.status;
-                        console.log("--runStatus summari----", runStatus)
                         if (runStatus === 'failed' || runStatus === 'cancelled') {
+                            console.log("--runStatus summari----", runStatus)
                             res.status(400).json({
                                 message: `Run ${runStatus}`,
                                 status: 400
@@ -145,36 +171,6 @@ If you're using the term in a different context, could you please provide more d
                     message: error.response.data.error.message
                 })
             }
-            // if (type === "spellCheckerBot") {
-            //     try {
-            //         let runSpellChecker = await axios({
-            //         url: `https://api.openai.com/v1/threads/${threadId}/messages`,
-            //         method: 'post',
-            //         headers: {
-            //             Authorization: `Bearer ${apiSendUserDetails.isSubscribe == 1 ? spellCheckerBotToken.subscribe_token : spellCheckerBotToken.token}`,
-            //             'OpenAI-Beta': 'assistants=v2',
-            //             'Content-Type': 'application/json'
-            //         },
-            //         data: {
-            //             role: role,
-            //             content: content
-            //         }
-            //         });
-
-            //         const pickSpellChecker = pick(runSpellChecker.data, ['id', 'content'])
-            //         pickSpellChecker.content = pickSpellChecker.content.map(c => ({ text: pick(c.text, ['value']), type: c.type }));
-            //         runSpellChecker = pickSpellChecker
-            //         runSpellChecker["userDetails"] = apiSendUserDetails
-
-            //         res.status(200).json({
-            //             data: runSpellChecker
-            //         })
-            //     } catch (error) {
-            //         res.status(400).json({
-            //             message: error.response.data.error.message
-            //         })
-            //     }
-            // }
 
         } else {
             res.status(400).json({
