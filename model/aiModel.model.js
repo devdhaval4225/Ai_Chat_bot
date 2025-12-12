@@ -29,6 +29,31 @@ const AiModel = sequelize.define('models', {
     allowNull: false,
     defaultValue: 1
   },
+  isImage: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 1
+  },
+  isVideo: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 1
+  },
+  isAudio: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 1
+  },
+  isFile: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 1
+  },
+  isCamera: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 1
+  },
   isActive: {
     type: DataTypes.INTEGER,
     allowNull: false,

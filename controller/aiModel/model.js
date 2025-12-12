@@ -13,6 +13,11 @@ exports.aiProvider = async (req, res) => {
                 'modelType',
                 'imageUrl',
                 'isPro',
+                'isImage',
+                'isVideo',
+                'isAudio',
+                'isFile',
+                'isCamera',
             ],
             order: [['modelName', 'ASC']],
         });
