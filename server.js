@@ -9,7 +9,7 @@ const port = process.env.PORT || 8000;
 
 app.use(cors({ origin: "*"}));
 app.use(cookiesParser());
-app.use(express.json());
+app.use(express.json({ limit: "100mb" }));
 app.use(express.urlencoded({extended: true}));
 
 // const {middAuth} = require("./middleware/auth");
@@ -20,12 +20,13 @@ app.use(apiLogger)
 const userRoutes = require("./routes/user.routes")
 const thirdPartyProvidor = require("./routes/thirdParty.routes");
 const subscription = require("./routes/subscription.routes");
-app.use("/api/user", userRoutes)
-app.use("/api/thirdparty", thirdPartyProvidor)
-app.use("/api/plan", subscription)
-app.use("/api/manage", require("./routes/manageToken.routes"))
-app.use("/api/assi", require("./routes/assistant.routes"))
-app.use("/api/aiModel", require("./routes/aimodel.routes"))
+app.use("/api/user", userRoutes);
+app.use("/api/thirdparty", thirdPartyProvidor);
+app.use("/api/plan", subscription);
+app.use("/api/manage", require("./routes/manageToken.routes"));
+app.use("/api/assi", require("./routes/assistant.routes"));
+app.use("/api/aiModel", require("./routes/aimodel.routes"));
+app.use("/api/conversation", require("./routes/conversation.routes"));
 
 app.listen(port, () => {
     console.log(`Server Running At PORT : ${port}`);

@@ -6,7 +6,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon server.js",
     "migrate": "npx sequelize-cli db:migrate",
-    "migrateCreate": "npx sequelize-cli migration:generate --name filed_add_assi_tool",
+    "migrateCreate": "npx sequelize-cli migration:generate --name filed_add_model",
     "migrateStatus": "npx sequelize-cli db:migrate:status",
     "seedCreate": "npx sequelize-cli seed:generate --name planInsert",
     "seed": "npx sequelize-cli db:seed:all"
