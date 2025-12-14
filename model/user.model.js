@@ -15,6 +15,10 @@ const User = sequelize.define('users', {
     allowNull: false,
     unique: true
   },
+  appId: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
   usedToken: {
     allowNull: true,
     type: DataTypes.INTEGER

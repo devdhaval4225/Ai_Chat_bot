@@ -11,13 +11,15 @@ const { checkToken } = require("../../helper/common");
 exports.login = async (req, res) => {
     try {
 
-        const { deviceId } = req.body;
+        const { deviceId, appId } = req.body;
 
         let findUser = await User.findOne({
             where: { deviceId: deviceId }
         });
         if (findUser == null) {
-            const createUser = await User.create({ deviceId: deviceId, uniqueId: `UN${shortid.generate()}`, totalToken: 5, reminToken: 5, planType: "Free-Plan" });
+            let insertObj = { deviceId: deviceId, uniqueId: `UN${shortid.generate()}`, totalToken: 5, reminToken: 5, planType: "Free-Plan" }
+            if (appId && appId != null) insertObj["appId"] = appId
+            const createUser = await User.create(insertObj);
             findUser = await User.findOne({
                 where: { deviceId: deviceId }
             });
@@ -30,12 +32,14 @@ exports.login = async (req, res) => {
             if (findUser.expireDate != null) {
                 const expireDate = moment(findUser.expireDate);
                 const checkDate = expireDate.isAfter(currentDate)
+                let updateobj = {
+                    isSubscribe: checkDate ? findUser.isSubscribe : 0,
+                    expireDate: checkDate ? findUser.expireDate : null,
+                    planType: checkDate ? findUser.planType : "Free-Plan"
+                }
+                if (appId && appId != null) updateobj["appId"] = appId
                 await User.update(
-                    {
-                        isSubscribe: checkDate ? findUser.isSubscribe : 0,
-                        expireDate: checkDate ? findUser.expireDate : null,
-                        planType: checkDate ? findUser.planType : "Free-Plan"
-                    },
+                    updateobj,
                     { where: { deviceId: deviceId } },
                 )
             }
