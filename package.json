@@ -6,7 +6,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon server.js",
     "migrate": "npx sequelize-cli db:migrate",
-    "migrateCreate": "npx sequelize-cli migration:generate --name filed_add_users",
+    "migrateCreate": "npx sequelize-cli migration:generate --name admin",
     "migrateStatus": "npx sequelize-cli db:migrate:status",
     "seedCreate": "npx sequelize-cli seed:generate --name planInsert",
     "seed": "npx sequelize-cli db:seed:all"
@@ -18,6 +18,7 @@
   "description": "",
   "dependencies": {
     "axios": "^1.10.0",
+    "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
@@ -25,7 +26,7 @@
     "dotenv": "^17.2.0",
     "express": "^5.1.0",
     "form-data": "^4.0.4",
-    "jsonwebtoken": "^9.0.2",
+    "jsonwebtoken": "^9.0.3",
     "lodash": "^4.17.21",
     "moment": "^2.30.1",
     "multer": "^2.0.2",

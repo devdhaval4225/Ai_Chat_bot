@@ -27,6 +27,7 @@ app.use("/api/manage", require("./routes/manageToken.routes"));
 app.use("/api/assi", require("./routes/assistant.routes"));
 app.use("/api/aiModel", require("./routes/aimodel.routes"));
 app.use("/api/conversation", require("./routes/conversation.routes"));
+app.use("/api/admin", require("./routes/admin.routes"));
 
 app.listen(port, () => {
     console.log(`Server Running At PORT : ${port}`);
