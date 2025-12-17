@@ -4,6 +4,7 @@ const { _, pick, omit } = require("lodash")
 const { getModelToken } = require("../../config/manageToken");
 const Model = require("../../model/aiModel.model");
 let threadId = "thread_123"
+const commonFunction = require("../../common/commonFunction");
 
 exports.converzationProvider = async (req, res) => {
     try {
@@ -35,6 +36,7 @@ exports.converzationProvider = async (req, res) => {
                 content: {},
                 userDetails: apiSendUserDetails
             }
+            const inputObj  = await this.apiInputObj(apiProvider,body)
 
             if (apiProvider === "openAi") {
                 // && conversationsId != ""
@@ -65,7 +67,8 @@ exports.converzationProvider = async (req, res) => {
                             data: {
                                 "model": model, // "gpt-4o-mini",
                                 "conversation": conversationsId,
-                                "input": message
+                                "input": [inputObj]
+                                // "input": message
                             }
                         });
                         await reduceToken(deviceId, uniqueId, apiProvider, "converzation", true, rToken);
@@ -80,7 +83,7 @@ exports.converzationProvider = async (req, res) => {
                         })
 
                     } catch (error) {
-                        console.log(error.response.data);
+                        console.log(error.response.data.error.message);
                         res.status(500).json({
                             message: "Something went wrong",
                             status: 500
@@ -88,7 +91,7 @@ exports.converzationProvider = async (req, res) => {
                     }
                 } else {
                     try {
-                        if (!conversationsId && conversationsId != "") {
+                        if (!conversationsId && conversationsId == "") {
                             res.status(400).json({
                                 message: "Conversations Id required"
                             })
@@ -96,7 +99,8 @@ exports.converzationProvider = async (req, res) => {
                         let inputBody = {
                             "model": `${model}`,
                             "conversation": { id: conversationsId },
-                            "input": message
+                            "input": [inputObj]
+                            // "input": message
                         }
                         // lastResId && 
                         if (threadId == null) {
@@ -137,15 +141,14 @@ exports.converzationProvider = async (req, res) => {
 
                 try {
                     let chatCompletions = await axios({
-                        url: `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${token}`,
+                        url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${token}`,
+                        // url: `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${token}`,
                         method: 'post',
                         headers: {
                             'Accept': 'application/json',
                             'Content-Type': 'application/json'
                         },
-                        data: {
-                            contents: createNewArray
-                        }
+                        data: inputObj
                     });
                     const content = chatCompletions.data.candidates.map(msg => ({
                         role: msg.content.role,
@@ -180,43 +183,44 @@ exports.converzationProvider = async (req, res) => {
             }
 
             if (apiProvider === "MistralAi") {
-                    if (body.threadId == null || body.threadId == "") {
-                        await reduceToken(deviceId, uniqueId, apiProvider, "converzationMistralAi", true, rToken);
-                    }
+                if (body.threadId == null || body.threadId == "") {
+                    await reduceToken(deviceId, uniqueId, apiProvider, "converzationMistralAi", true, rToken);
+                }
 
-                    try {
-                        let chatCompletions = await axios({
-                            url: 'https://api.mistral.ai/v1/chat/completions',
-                            method: 'post',
-                            headers: {
-                                'Authorization': `Bearer ${token}`,
-                                'Content-Type': 'application/json',
-                                'Accept': 'application/json'
-                            },
-                            data: {
-                                "model": model,
-                                "messages": newContents,
-                                "temperature": 0.7,
-                                "max_tokens": 256
-                            }
-                        });
-                        const contentRes = chatCompletions.data.choices.map(msg => ({ role: msg.message.role, text: msg.message.content }))
-                        updateUserData = await checkToken(deviceId)
-
-                        const mistralRes = {
-                            content: contentRes,
-                            userDetails: pick(updateUserData, ['id', 'totalToken', 'usedToken', 'reminToken', 'planType', 'isSubscribe', 'expireDate']),
+                try {
+                    let chatCompletions = await axios({
+                        url: 'https://api.mistral.ai/v1/chat/completions',
+                        method: 'post',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        data: {
+                            "model": "pixtral-12b-latest",
+                            // "model": model,
+                            "messages": [inputObj],
+                            "temperature": 0.7,
+                            "max_tokens": 256
                         }
+                    });
+                    const contentRes = chatCompletions.data.choices.map(msg => ({ role: msg.message.role, text: msg.message.content }))
+                    updateUserData = await checkToken(deviceId)
 
-                        res.status(200).json({
-                            data: mistralRes
-                        })
-                    } catch (error) {
-                        console.log("---error--", error.response.data)
-                        res.status(400).json({
-                            message: error.response.data.message,
-                        })
+                    const mistralRes = {
+                        content: contentRes,
+                        userDetails: pick(updateUserData, ['id', 'totalToken', 'usedToken', 'reminToken', 'planType', 'isSubscribe', 'expireDate']),
                     }
+
+                    res.status(200).json({
+                        data: mistralRes
+                    })
+                } catch (error) {
+                    console.log("---error--", error.response.data.detail)
+                    res.status(400).json({
+                        message: error.response.data.detail,
+                    })
+                }
             }
         }
     } catch (error) {
@@ -225,5 +229,94 @@ exports.converzationProvider = async (req, res) => {
             message: "Something went wrong",
             status: 500
         })
+    }
+};
+
+
+exports.apiInputObj = async (type, body) => {
+    try {
+        let finalMessageObj = {}
+
+        if (type == "openAi") {
+            const role = body.message[0]["role"]
+            finalMessageObj["role"] = role
+
+            const openMessArr = []
+            for (let i = 0; i < body.message.length; i++) {
+                let openMessObj = {}
+
+                const type = body.message[i]["type"];
+                const text = body.message[i]["text"];
+                const imageData = body.message[i]["imageData"];
+
+                if (type == "image") {
+                    openMessObj["type"] = "input_image"
+                    openMessObj["image_url"] = imageData
+                } else {
+                    openMessObj["text"] = text
+                    openMessObj["type"] = "input_text"
+                }
+
+                openMessArr.push(openMessObj)
+                openMessObj = {}
+            }
+            finalMessageObj["content"] = openMessArr
+            return finalMessageObj;
+
+        } else if (type == "Gemini") {
+            const role = body.message[0]["role"]
+            // finalMessageObj["role"] = role
+
+            const geminiMessArr = []
+            for (let i = 0; i < body.message.length; i++) {
+                let geminiMessObj = {}
+
+                const type = body.message[i]["type"];
+                const text = body.message[i]["text"];
+                const imageData = body.message[i]["imageData"];
+                const mimeType = body.message[i]["mimeType"];
+
+                if (type == "image") {
+                    geminiMessObj["inlineData"] = {
+                        mimeType: mimeType,
+                        data: imageData
+                    }
+                } else {
+                    geminiMessObj["text"] = text
+                }
+                geminiMessArr.push(geminiMessObj)
+                geminiMessObj = {}
+            }
+            finalMessageObj["contents"] = [{ parts: geminiMessArr }]
+            return finalMessageObj;
+
+        } else if (type == "MistralAi") {
+            const role = body.message[0]["role"]
+            finalMessageObj["role"] = role
+
+            const misMessArr = []
+            for (let i = 0; i < body.message.length; i++) {
+                let misMessObj = {}
+
+                const type = body.message[i]["type"];
+                const text = body.message[i]["text"];
+                const imageData = body.message[i]["imageData"];
+
+                if (type == "image") {
+                    misMessObj["type"] = "image_url"
+                    misMessObj["image_url"] = { url: imageData }
+                } else {
+                    misMessObj["type"] = "text"
+                    misMessObj["text"] = text
+                }
+                misMessArr.push(misMessObj)
+                misMessObj = {}
+            }
+            finalMessageObj["content"] = misMessArr
+            return finalMessageObj;
+        }
+
+    } catch (error) {
+        console.log("---inout creation error ---", error)
     }
 };
