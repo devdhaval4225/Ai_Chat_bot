@@ -1,6 +1,8 @@
 const CryptoJS = require("crypto-js");
 const axios = require("axios");
 const { getToken, getModelToken } = require("../config/manageToken");
+const path = require('path');
+const fs = require('fs/promises');
 
 exports.uniqueNumber = async (type) => {
     const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -65,5 +67,25 @@ exports.checkModeration = async (text) => {
         return flagged;
     } catch (error) {
         console.error("Error running moderation:", error.response?.data || error.message);
+    }
+}
+
+exports.clearUploadsDir = async () => {
+    try {
+        const uploadsDir = path.join(process.cwd(), 'public/uploads');
+        const files = await fs.readdir(uploadsDir);
+
+        await Promise.all(
+            files.map(file =>
+                fs.rm(
+                    path.join(uploadsDir, file),
+                    { recursive: true, force: true }
+                )
+            )
+        );
+
+        console.log('Uploads directory cleared');
+    } catch (err) {
+        console.error('Failed to clear uploads directory:', err);
     }
 }
