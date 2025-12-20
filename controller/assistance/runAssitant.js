@@ -8,7 +8,7 @@ const commonFunction = require("../../common/commonFunction");
 exports.runAssi = async (req, res) => {
     try {
         const uniqueId = req.headers.uniqueid
-        const appVersion = req.headers.appVersion
+        const appVersion = req.headers.appversion
         const id = req.params.id
         const body = req.body;
         const userDetails = await checkToken(req.body.deviceId)
