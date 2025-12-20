@@ -36,7 +36,7 @@ exports.converzationProvider = async (req, res) => {
                 content: {},
                 userDetails: apiSendUserDetails
             }
-            const inputObj  = await this.apiInputObj(apiProvider,body)
+            const inputObj = await this.apiInputObj(apiProvider, body)
 
             if (apiProvider === "openAi") {
                 // && conversationsId != ""
@@ -154,10 +154,16 @@ exports.converzationProvider = async (req, res) => {
                         role: msg.content.role,
                         text: msg.content.parts.map((v) => v.text).join(",")
                     }))
+                    const newRes = {
+                        role: chatCompletions.data.candidates[0]["content"]["role"],
+                        text: chatCompletions.data.candidates[0]["content"]["parts"].map((v) => v.text).join(","),
+                        threadId: threadId
+                    }
                     updateUserData = await checkToken(deviceId)
 
                     const resChatCompletions = {
-                        content: content,
+                        content: newRes,
+                        // content: content,
                         userDetails: pick(updateUserData, ['id', 'totalToken', 'usedToken', 'reminToken', 'planType', 'isSubscribe', 'expireDate'])
                     }
 
@@ -204,7 +210,7 @@ exports.converzationProvider = async (req, res) => {
                             "max_tokens": 256
                         }
                     });
-                    const contentRes = chatCompletions.data.choices.map(msg => ({ role: msg.message.role, text: msg.message.content }))
+                    const contentRes = { role: chatCompletions.data.choices[0]["message"]["role"], text: chatCompletions.data.choices[0]["message"]["content"], threadId: threadId }
                     updateUserData = await checkToken(deviceId)
 
                     const mistralRes = {
