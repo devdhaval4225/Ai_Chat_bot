@@ -1,13 +1,14 @@
 const axios = require("axios");
 const { checkToken, reduceToken } = require("../../helper/common");
 const { pick } = require("lodash");
-const { getToken, getModelToken } = require("../../config/manageToken");
+const { getToken, getModelToken, getAssToken } = require("../../config/manageToken");
 const AssistantModel = require("../../model/assistanceModel");
 const commonFunction = require("../../common/commonFunction");
 
 exports.runAssi = async (req, res) => {
     try {
-        const openAi = await getToken('openAi');
+        const uniqueId = req.headers.uniqueid
+        const appVersion = req.headers.appVersion
         const id = req.params.id
         const body = req.body;
         const userDetails = await checkToken(req.body.deviceId)
@@ -26,17 +27,40 @@ exports.runAssi = async (req, res) => {
             })
         }
 
-        const modelTokens = await getModelToken("openAi", findAssi.dataValues.model);
+
+        const openAiToken = await getModelToken("openAi");
+
+
+        const modelTokens = await getAssToken(id);
         const assistantId = findAssi.dataValues.assistantId
-        const token = apiSendUserDetails.isSubscribe == 1 ? modelTokens.proToken : modelTokens.token
-        
-        const filedObj = body && body.filedObj ? body.filedObj : {}
+        const token = apiSendUserDetails.isSubscribe == 1 ? openAiToken.proToken : openAiToken.token
+        const rToken = modelTokens.reduceToken
+        const assiName = modelTokens.name
+
+        let filedObj = body && body.filedObj ? body.filedObj : {}
 
 
-        if (!filedObj.threadId) {
-            res.status(400).json({
-                message: "Thread Id Missing"
-            })
+        if (!filedObj.threadId || filedObj.threadId == null) {
+            try {
+                let createThread = await axios({
+                    url: 'https://api.openai.com/v1/threads',
+                    method: 'post',
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        'OpenAI-Beta': 'assistants=v2',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const pickThredData = pick(createThread.data, 'id')
+                await reduceToken(body.deviceId, uniqueId, "openAi", `${assiName}`, true, rToken)
+
+                filedObj["threadId"] = pickThredData.id
+            } catch (error) {
+                // console.log("--error--", error)
+                res.status(400).json({
+                    message: error.response.data.error.message
+                })
+            }
         }
 
         if (body && body.filedObj && body.filedObj.contents) {
@@ -62,7 +86,6 @@ If you're using the term in a different context, could you please provide more d
             }));
 
             try {
-                const newSummriRes = {}
                 try {
                     let runSummari = await axios({
                         url: `https://api.openai.com/v1/threads/${filedObj.threadId}/messages`,
@@ -157,11 +180,23 @@ If you're using the term in a different context, could you please provide more d
                 answerRes = answerRes.data.data
                 const lastMsg = answerRes.find((m) => m.role === "assistant");
 
-                newSummriRes["content"] = [{
-                    role: lastMsg.role,
-                    text: lastMsg["content"][0]["text"]["value"] || ""
-                }];
-                newSummriRes["userDetails"] = apiSendUserDetails
+                let newSummriRes = {}
+                if (appVersion && appVersion >= 21) {
+                    newSummriRes = {
+                        content: {
+                            role: lastMsg.role,
+                            text: lastMsg["content"][0]["text"]["value"] || "",
+                            threadId: filedObj.threadId
+                        },
+                        userDetails: apiSendUserDetails
+                    };
+                } else {
+                    newSummriRes["content"] = [{
+                        role: lastMsg.role,
+                        text: lastMsg["content"][0]["text"]["value"] || ""
+                    }]
+                    newSummriRes["userDetails"] = apiSendUserDetails
+                }
 
                 res.status(200).json({
                     data: newSummriRes

@@ -37,9 +37,15 @@ exports.login = async (req, res) => {
                     expireDate: checkDate ? findUser.expireDate : null,
                     planType: checkDate ? findUser.planType : "Free-Plan"
                 }
-                if (appId && appId != null) updateobj["appId"] = appId
                 await User.update(
                     updateobj,
+                    { where: { deviceId: deviceId } },
+                )
+            }
+            if (appId && appId != null) {
+                const updateUser = { appId: appId }
+                await User.update(
+                    updateUser,
                     { where: { deviceId: deviceId } },
                 )
             }
@@ -119,6 +125,9 @@ exports.login = async (req, res) => {
                     });
                 }
             }
+            findUser = await User.findOne({
+                where: { deviceId: deviceId }
+            });
             res.status(200).json({
                 data: findUser.toJSON()
             })

@@ -1,5 +1,6 @@
 const TokenModel = require("../model/manageToken.model");
 const Model = require("../model/aiModel.model");
+const Ass = require("../model/assistanceModel");
 
 async function getToken(key) {
     let config = await TokenModel.findAll();
@@ -12,5 +13,10 @@ async function getModelToken(type, model) {
     return { token: config.dataValues.token, proToken: config.dataValues.proToken };
 }
 
+async function getAssToken(hashId) {
+    let config = await Ass.findOne({ where: { hashId: hashId } })
+    return { reduceToken: config.dataValues.reduceToken, name: config.dataValues.nameAssistant };
+}
 
-module.exports = { getToken, getModelToken };
+
+module.exports = { getToken, getModelToken, getAssToken };
