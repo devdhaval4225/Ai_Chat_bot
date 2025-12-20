@@ -14,7 +14,7 @@ const { updateTool } = require("../controller/admin/tools/updateTool");
 
 const { uploadImageToS3 } = require("../controller/admin/imageUpload/uploads3");
 
-router.post('/login',login);
+router.post('/login', login);
 
 // Model
 router.get('/model', verifyAdmin, allModel);
@@ -28,7 +28,7 @@ router.post('/assistance/:id', verifyAdmin, updateAssistance);
 router.get('/tool', verifyAdmin, tools);
 router.post('/tool/:id', verifyAdmin, updateTool);
 
-router.post("/uploadS3", upload, uploadImageToS3)
+router.post("/uploadS3", verifyAdmin, upload, uploadImageToS3)
 
 
 module.exports = router;
