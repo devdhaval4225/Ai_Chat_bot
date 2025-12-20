@@ -51,9 +51,9 @@ exports.runAssiV1 = async (req, res) => {
                 const pickThredData = pick(createThread.data, 'id')
                 await reduceToken(body.deviceId, uniqueId, "openAi", `${assiName}`, true, rToken)
 
-                filedObj["threadId"] = pickThredData.id
+                body["threadId"] = pickThredData.id
             } catch (error) {
-                // console.log("--error--", error)
+                console.log("--error--", error)
                 res.status(400).json({
                     message: error.response.data.error.message
                 })
