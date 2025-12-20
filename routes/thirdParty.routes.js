@@ -3,11 +3,13 @@ const router = require('express').Router();
 const { provider } = require("../controller/thirdPartyProvider/apiProvider");
 const { aiBot } = require("../controller/thirdPartyProvider/openAiBot");
 const { pdfSummaryBot } = require("../controller/thirdPartyProvider/pdfSummaryBot");
+const { createThread } = require("../controller/thirdPartyProvider/createThread");
 const { upload } = require("../helper/upload");
 const {middAuth} = require("../middleware/auth");
 
 
 router.post('/provider',middAuth,provider);
+router.post('/threadCreate',middAuth,createThread);
 router.post('/aibot',middAuth,aiBot);
 router.post('/pdfsummary',upload,middAuth,pdfSummaryBot);
 

@@ -9,7 +9,6 @@ const commonFunction = require("../../common/commonFunction");
 exports.provider = async (req, res) => {
     try {
         const uniqueId = req.headers.uniqueid
-        // const { deviceId } = req.params
         const body = req.body
         const { apiProvider, deviceId } = body
 
