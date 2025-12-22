@@ -17,7 +17,12 @@ exports.login = async (req, res) => {
             where: { deviceId: deviceId }
         });
         if (findUser == null) {
-            let insertObj = { deviceId: deviceId, uniqueId: `UN${shortid.generate()}`, totalToken: 5, reminToken: 5, planType: "Free-Plan" }
+            let findPlan = await Plan.findOne({
+                where: { planId: `new-user` },
+            })
+            findPlan = findPlan.toJSON()
+            const newUserReminToken = findPlan.token
+            let insertObj = { deviceId: deviceId, uniqueId: `UN${shortid.generate()}`, totalToken: newUserReminToken, reminToken: newUserReminToken, planType: "Free-Plan" }
             if (appId && appId != null) insertObj["appId"] = appId
             const createUser = await User.create(insertObj);
             findUser = await User.findOne({
@@ -50,81 +55,81 @@ exports.login = async (req, res) => {
                 )
             }
 
-            if (findUser.planType === "Free-Plan" && findUser.reminToken == 0) {
-                const dailyLimit = process.env.DAILY_LIMIT
+            // if (findUser.planType === "Free-Plan" && findUser.reminToken == 0) {
+            //     const dailyLimit = process.env.DAILY_LIMIT
 
-                const lastEntry = await History.findAll({
-                    where: {
-                        deviceId: deviceId,
-                        apiProvider: "dailyLimit",
-                        [Op.and]: where(fn("DATE", col("useDateTime")), fn("CURDATE")),
-                    },
-                    order: [["id", "DESC"]],
-                });
-                if (!lastEntry.length > 0) {
+            //     const lastEntry = await History.findAll({
+            //         where: {
+            //             deviceId: deviceId,
+            //             apiProvider: "dailyLimit",
+            //             [Op.and]: where(fn("DATE", col("useDateTime")), fn("CURDATE")),
+            //         },
+            //         order: [["id", "DESC"]],
+            //     });
+            //     if (!lastEntry.length > 0) {
 
-                    await User.hasOne(Plan, {
-                        foreignKey: 'planSlug',
-                        sourceKey: 'planType',
-                        constraints: false
-                    });
-                    let findUserDetails = await User.findOne({
-                        where: { deviceId: deviceId },
-                        include: [
-                            {
-                                model: Plan,
-                                required: true,
-                                on: literal('users.planType = plan.planSlug')
-                            }
-                        ]
-                    });
-                    findUserDetails = findUserDetails.toJSON()
+            //         await User.hasOne(Plan, {
+            //             foreignKey: 'planSlug',
+            //             sourceKey: 'planType',
+            //             constraints: false
+            //         });
+            //         let findUserDetails = await User.findOne({
+            //             where: { deviceId: deviceId },
+            //             include: [
+            //                 {
+            //                     model: Plan,
+            //                     required: true,
+            //                     on: literal('users.planType = plan.planSlug')
+            //                 }
+            //             ]
+            //         });
+            //         findUserDetails = findUserDetails.toJSON()
 
-                    // Find Plan
-                    let findPlan = await Plan.findOne({
-                        where: { planId: `daily-L!M!T`, isActive: 1 },
-                    })
-                    findPlan = findPlan.toJSON()
+            //         // Find Plan
+            //         let findPlan = await Plan.findOne({
+            //             where: { planId: `daily-L!M!T`, isActive: 1 },
+            //         })
+            //         findPlan = findPlan.toJSON()
 
-                    // Create History 
-                    await History.create({
-                        apiProvider: "dailyLimit",
-                        deviceId: deviceId,
-                        totalToken: Number(findUser.totalToken) + Number(dailyLimit),
-                        usedToken: findUser.usedToken,
-                        reminToken: dailyLimit,
-                        metadata: "dailyLimit"
-                    })
+            //         // Create History 
+            //         await History.create({
+            //             apiProvider: "dailyLimit",
+            //             deviceId: deviceId,
+            //             totalToken: Number(findUser.totalToken) + Number(dailyLimit),
+            //             usedToken: findUser.usedToken,
+            //             reminToken: dailyLimit,
+            //             metadata: "dailyLimit"
+            //         })
 
-                    // Create Subscription History
-                    await Subscription.create({
-                        deviceId: deviceId,
-                        currentPlanId: findUserDetails.plan.planId,
-                        currentToken: findUserDetails.reminToken,
-                        newPlanId: findPlan.planId,
-                        newPlanToken: findPlan.token,
-                        isUpDown: "daliy",
-                        newRefreshToken: findPlan.token
-                    })
+            //         // Create Subscription History
+            //         await Subscription.create({
+            //             deviceId: deviceId,
+            //             currentPlanId: findUserDetails.plan.planId,
+            //             currentToken: findUserDetails.reminToken,
+            //             newPlanId: findPlan.planId,
+            //             newPlanToken: findPlan.token,
+            //             isUpDown: "daliy",
+            //             newRefreshToken: findPlan.token
+            //         })
 
-                    await User.update(
-                        {
-                            totalToken: Number(findUser.totalToken) + Number(findPlan.token),
-                            reminToken: dailyLimit,
-                        },
-                        { where: { deviceId: deviceId } },
-                    )
+            //         await User.update(
+            //             {
+            //                 totalToken: Number(findUser.totalToken) + Number(findPlan.token),
+            //                 reminToken: dailyLimit,
+            //             },
+            //             { where: { deviceId: deviceId } },
+            //         )
 
-                    const dailyFreshUserDetails = await checkToken(deviceId);
-                    return res.status(200).json({
-                        data: dailyFreshUserDetails
-                    });
-                } else {
-                    return res.status(200).json({
-                        data: findUser.toJSON()
-                    });
-                }
-            }
+            //         const dailyFreshUserDetails = await checkToken(deviceId);
+            //         return res.status(200).json({
+            //             data: dailyFreshUserDetails
+            //         });
+            //     } else {
+            //         return res.status(200).json({
+            //             data: findUser.toJSON()
+            //         });
+            //     }
+            // }
             findUser = await User.findOne({
                 where: { deviceId: deviceId }
             });
