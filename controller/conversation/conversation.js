@@ -72,6 +72,8 @@ exports.converzationProvider = async (req, res) => {
                             }
                         });
                         await reduceToken(deviceId, uniqueId, apiProvider, "converzation", true, rToken);
+                        updateUserData = await checkToken(deviceId)
+                        resOpenObj["userDetails"] = pick(updateUserData, ['id', 'totalToken', 'usedToken', 'reminToken', 'planType', 'isSubscribe', 'expireDate'])
 
                         resOpenObj["content"]["id"] = conversationsId
                         resOpenObj["content"]["role"] = createConversations.data.output[0]["role"]
@@ -103,8 +105,10 @@ exports.converzationProvider = async (req, res) => {
                             // "input": message
                         }
                         // lastResId && 
-                        if (threadId == null) {
+                        if (body.threadId == null || body.threadId == "") {
                             await reduceToken(deviceId, uniqueId, apiProvider, "converzationOpenAi", true, rToken);
+                            updateUserData = await checkToken(deviceId)
+                            resOpenObj["userDetails"] = pick(updateUserData, ['id', 'totalToken', 'usedToken', 'reminToken', 'planType', 'isSubscribe', 'expireDate'])
                         }
                         const createConversations = await axios({
                             url: 'https://api.openai.com/v1/responses',

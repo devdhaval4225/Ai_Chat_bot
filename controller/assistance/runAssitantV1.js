@@ -7,6 +7,7 @@ const commonFunction = require("../../common/commonFunction");
 
 exports.runAssiV1 = async (req, res) => {
     try {
+        let updateUserData
         const uniqueId = req.headers.uniqueid
         const appVersion = req.headers.appversion
         const id = req.params.id
@@ -175,6 +176,7 @@ If you're using the term in a different context, could you please provide more d
 
                 answerRes = answerRes.data.data
                 const lastMsg = answerRes.find((m) => m.role === "assistant");
+                updateUserData = await checkToken(body.deviceId)
 
                 const newSummriRes = {
                     content: {
@@ -182,7 +184,7 @@ If you're using the term in a different context, could you please provide more d
                         text: lastMsg["content"][0]["text"]["value"] || "",
                     },
                     threadId: body.threadId,
-                    userDetails: apiSendUserDetails
+                    userDetails: pick(updateUserData, ['id', 'totalToken', 'usedToken', 'reminToken', 'planType', 'isSubscribe', 'expireDate'])
                 };
 
                 res.status(200).json({
