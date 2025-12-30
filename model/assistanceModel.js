@@ -12,6 +12,14 @@ const AssistantModel = sequelize.define('assistant', {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  type: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  character_category: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
   nameAssistant: {
     type: DataTypes.STRING,
     allowNull: false,

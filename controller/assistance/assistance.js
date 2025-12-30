@@ -49,6 +49,8 @@ exports.assistanceProvider = async (req, res) => {
                     'isMostFavorite',
                     'isHomeScreen',
                     'question',
+                    'type',
+                    'character_category',
                     [Sequelize.literal('0'), 'isTool']   // 👈 static field
                 ],
             });

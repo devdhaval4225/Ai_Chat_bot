@@ -40,7 +40,9 @@ exports.assistanceViaCategory = async (req, res) => {
                 isMostFavorite,
                 isActive,
                 isHomeScreen,
-                FALSE AS isTool
+                FALSE AS isTool,
+                type,
+                character_category
             FROM assistant
             WHERE isActive = 1
 
@@ -57,7 +59,9 @@ exports.assistanceViaCategory = async (req, res) => {
                 isMostFavorite,
                 isActive,
                 isHomeScreen,
-                TRUE AS isTool
+                TRUE AS isTool,
+                'assistant' AS type,
+                'default' AS character_category
             FROM aiTool
             WHERE isActive = 1
 
