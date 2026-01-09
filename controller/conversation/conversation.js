@@ -75,11 +75,20 @@ exports.converzationProvider = async (req, res) => {
                         updateUserData = await checkToken(deviceId)
                         resOpenObj["userDetails"] = pick(updateUserData, ['id', 'totalToken', 'usedToken', 'reminToken', 'planType', 'isSubscribe', 'expireDate'])
 
-                        resOpenObj["content"]["id"] = conversationsId
-                        resOpenObj["content"]["role"] = createConversations.data.output[0]["role"]
-                        resOpenObj["content"]["text"] = createConversations.data.output[0]["content"][0]["text"]
-                        resOpenObj["content"]["type"] = createConversations.data.output[0]["content"][0]["type"]
-                        resOpenObj["content"]["threadId"] = threadId
+                        if (modelId == 5) {
+                            const modelO3Res = createConversations.data.output.filter((v) => v.type == "message")[0]
+                            resOpenObj["content"]["id"] = conversationsId
+                            resOpenObj["content"]["role"] = modelO3Res["role"]
+                            resOpenObj["content"]["text"] = modelO3Res["content"][0]["text"]
+                            resOpenObj["content"]["type"] = modelO3Res["content"][0]["type"]
+                            resOpenObj["content"]["threadId"] = threadId
+                        } else {
+                            resOpenObj["content"]["id"] = conversationsId
+                            resOpenObj["content"]["role"] = createConversations.data.output[0]["role"]
+                            resOpenObj["content"]["text"] = createConversations.data.output[0]["content"][0]["text"]
+                            resOpenObj["content"]["type"] = createConversations.data.output[0]["content"][0]["type"]
+                            resOpenObj["content"]["threadId"] = threadId
+                        }
                         res.status(200).json({
                             data: resOpenObj
                         })
@@ -119,11 +128,20 @@ exports.converzationProvider = async (req, res) => {
                             },
                             data: inputBody
                         });
-                        resOpenObj["content"]["id"] = conversationsId
-                        resOpenObj["content"]["role"] = createConversations.data.output[0]["role"]
-                        resOpenObj["content"]["text"] = createConversations.data.output[0]["content"][0]["text"]
-                        resOpenObj["content"]["type"] = createConversations.data.output[0]["content"][0]["type"]
-                        resOpenObj["content"]["threadId"] = threadId
+                        if (modelId == 5) {
+                            const modelO3Res = createConversations.data.output.filter((v) => v.type == "message")[0]
+                            resOpenObj["content"]["id"] = conversationsId
+                            resOpenObj["content"]["role"] = modelO3Res["role"]
+                            resOpenObj["content"]["text"] = modelO3Res["content"][0]["text"]
+                            resOpenObj["content"]["type"] = modelO3Res["content"][0]["type"]
+                            resOpenObj["content"]["threadId"] = threadId
+                        } else {
+                            resOpenObj["content"]["id"] = conversationsId
+                            resOpenObj["content"]["role"] = createConversations.data.output[0]["role"]
+                            resOpenObj["content"]["text"] = createConversations.data.output[0]["content"][0]["text"]
+                            resOpenObj["content"]["type"] = createConversations.data.output[0]["content"][0]["type"]
+                            resOpenObj["content"]["threadId"] = threadId
+                        }
 
                         res.status(200).json({
                             data: resOpenObj

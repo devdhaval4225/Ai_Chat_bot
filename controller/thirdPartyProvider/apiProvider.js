@@ -379,7 +379,7 @@ If you're using the term in a different context, could you please provide more d
                         updateUserData = await checkToken(deviceId)
 
                         const resChatCompletions = {
-                            content: content,
+                            content: content[0],
                             userDetails: pick(updateUserData, ['id', 'totalToken', 'usedToken', 'reminToken', 'planType', 'isSubscribe', 'expireDate'])
                         }
 
@@ -431,10 +431,8 @@ If you're using the term in a different context, could you please provide more d
 
                 if (apiType === "chatCompletion") {
 
-                    if (getMetadata.deepSeekId !== body.filedObj.threadId) {
-                        res.status(400).json({
-                            message: "Thread Id Missing"
-                        })
+                    if (!body.filedObj.threadId) {
+                        await reduceToken(deviceId, uniqueId, apiProvider, apiType, true)
                     }
 
                     for (const item of contents) {
@@ -474,11 +472,12 @@ If you're using the term in a different context, could you please provide more d
                             role: msg.message.role,
                             text: msg.message.content,
                             reasoning_content: msg.message.reasoning_content,
+                            threadId: "thread_123"
                         }))
                         updateUserData = await checkToken(deviceId)
 
                         const resChatCompletions = {
-                            content: chatCompletions,
+                            content: chatCompletions[0],
                             userDetails: pick(updateUserData, ['id', 'totalToken', 'usedToken', 'reminToken', 'planType', 'isSubscribe', 'expireDate'])
                         }
 
