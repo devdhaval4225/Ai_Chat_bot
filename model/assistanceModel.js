@@ -36,6 +36,10 @@ const AssistantModel = sequelize.define('assistant', {
     type: DataTypes.TEXT,
     allowNull: false,
   },
+  thumbnail: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+  },
   tier: {
     type: DataTypes.STRING,
     allowNull: false,
