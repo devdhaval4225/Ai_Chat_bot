@@ -52,6 +52,10 @@ const AiMediaFeature = sequelize.define('ai_media_features', {
     type: DataTypes.BOOLEAN,
     allowNull: false,
     defaultValue: true
+  },
+    position: {
+    type: DataTypes.INTEGER,
+    allowNull: true
   }
 }, {
   tableName: 'ai_media_features',

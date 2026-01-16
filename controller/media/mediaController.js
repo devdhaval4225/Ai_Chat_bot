@@ -54,9 +54,10 @@ exports.mediaFeatureProvider = async (req, res) => {
                 'defaultUserImage',
                 'imageRatio',
                 'imageResolution',
-                'isActive'
+                'isActive',
+                'position'
             ],
-            order: [['name', 'ASC']],
+            order: [['position', 'ASC'], ['createdAt', 'DESC']],
             raw: true
         });
 
