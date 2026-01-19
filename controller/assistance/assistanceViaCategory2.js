@@ -6,7 +6,35 @@ const sequelize = require("../../db/connection");
 
 exports.getAssistantsV2 = async (req, res) => {
     try {
-        // Query 1: Get all active assistants
+        // Step 1: Get and sort categories FIRST
+        let [catRows] = await sequelize.query(`
+            SELECT name, position FROM categories WHERE isActive = 1 ORDER BY id ASC;
+        `);
+
+        // Sort categories by their position
+        let catPositioned = catRows.filter(c => c.position !== null).sort((a, b) => a.position - b.position);
+        let catUnpositioned = catRows.filter(c => c.position === null);
+        let finalCategories = new Array(catRows.length).fill(null);
+
+        catPositioned.forEach(item => {
+            const index = item.position - 1;
+            if (index >= 0 && index < finalCategories.length && finalCategories[index] === null) {
+                finalCategories[index] = item;
+            } else {
+                catUnpositioned.push(item);
+            }
+        });
+
+        let catIdx = 0;
+        for (let i = 0; i < finalCategories.length; i++) {
+            if (finalCategories[i] === null) {
+                finalCategories[i] = catUnpositioned[catIdx];
+                catIdx++;
+            }
+        }
+        const sortedCategoryNames = finalCategories.filter(c => c !== null).map(c => c.name);
+
+        // Step 2: Get all assistants
         let [assistants] = await sequelize.query(`
             SELECT 
                 id,
@@ -29,30 +57,52 @@ exports.getAssistantsV2 = async (req, res) => {
             ORDER BY id ASC;
         `);
 
-        // --- REORDERING LOGIC FOR EXACT POSITIONING (Assistants) ---
-        let positioned = assistants.filter(a => a.position !== null).sort((a, b) => a.position - b.position);
-        let unpositioned = assistants.filter(a => a.position === null);
-        let finalAssistants = new Array(assistants.length).fill(null);
+        // Step 3: Group by category and apply exact positioning within each category
+        let groupedByCategory = groupBy(assistants, 'category');
+        let finalAssistants = [];
 
-        positioned.forEach(item => {
-            const index = item.position - 1;
-            if (index >= 0 && index < finalAssistants.length && finalAssistants[index] === null) {
-                finalAssistants[index] = item;
-            } else {
-                unpositioned.push(item); 
+        sortedCategoryNames.forEach(catName => {
+            let catItems = groupedByCategory[catName] || [];
+            if (catItems.length > 0) {
+                // Separate positioned and unpositioned items
+                let positioned = catItems.filter(a => a.position !== null);
+                let unpositioned = catItems.filter(a => a.position === null);
+
+                // Create array with exact positions
+                let maxPos = positioned.length > 0 ? Math.max(...positioned.map(a => a.position)) : 0;
+                let finalCatArray = new Array(Math.max(maxPos, catItems.length)).fill(null);
+
+                // Place positioned items at exact spots
+
+                positioned.forEach(item => {
+                    const idx = item.position - 1;
+                    if (idx >= 0 && idx < finalCatArray.length) {
+                        finalCatArray[idx] = item;
+                    }
+                });
+
+                // Fill remaining spots with unpositioned items
+
+                let unposIdx = 0;
+                for (let i = 0; i < finalCatArray.length; i++) {
+                    if (finalCatArray[i] === null && unposIdx < unpositioned.length) {
+                        finalCatArray[i] = unpositioned[unposIdx];
+                        unposIdx++;
+                    }
+                }
+                // Add any remaining unpositioned items
+                while (unposIdx < unpositioned.length) {
+                    finalCatArray.push(unpositioned[unposIdx]);
+                    unposIdx++;
+                }
+
+                finalAssistants = finalAssistants.concat(finalCatArray.filter(a => a !== null));
             }
         });
 
-        let unposIdx = 0;
-        for (let i = 0; i < finalAssistants.length; i++) {
-            if (finalAssistants[i] === null) {
-                finalAssistants[i] = unpositioned[unposIdx];
-                unposIdx++;
-            }
-        }
-        assistants = finalAssistants.filter(a => a !== null);
+        assistants = finalAssistants;
 
-        // Query 2: Get all active tools
+        // Query: Get all active tools
         const [tools] = await sequelize.query(`
             SELECT 
                 id,
@@ -74,12 +124,29 @@ exports.getAssistantsV2 = async (req, res) => {
             ORDER BY category ASC, id ASC;
         `);
 
-        // Query 3: Get categories with positioning
+        const assistantCategories = sortedCategoryNames.filter(cat => assistants.some(a => a.category === cat));
+        const toolCategories = sortedCategoryNames.filter(cat => tools.some(t => t.category === cat));
+
+        res.status(200).json({
+            assistantCategories: assistantCategories,
+            toolCategories: toolCategories,
+            assistants: assistants,
+            aiTools: tools
+        })
+    } catch (error) {
+        console.log("---error---", error)
+        res.status(500).json({ message: "Something went wrong", status: 500 })
+    }
+};
+
+exports.getCharactersV2 = async (req, res) => {
+    try {
+        // Step 1: Get and sort categories FIRST
         let [catRows] = await sequelize.query(`
             SELECT name, position FROM categories WHERE isActive = 1 ORDER BY id ASC;
         `);
 
-        // --- REORDERING LOGIC FOR EXACT POSITIONING (Categories) ---
+        // Sort categories by their position
         let catPositioned = catRows.filter(c => c.position !== null).sort((a, b) => a.position - b.position);
         let catUnpositioned = catRows.filter(c => c.position === null);
         let finalCategories = new Array(catRows.length).fill(null);
@@ -100,25 +167,9 @@ exports.getAssistantsV2 = async (req, res) => {
                 catIdx++;
             }
         }
-        const allCategories = finalCategories.filter(c => c !== null).map(c => c.name);
-        
-        const assistantCategories = allCategories.filter(cat => assistants.some(a => a.category === cat));
-        const toolCategories = allCategories.filter(cat => tools.some(t => t.category === cat));
+        const sortedCategoryNames = finalCategories.filter(c => c !== null).map(c => c.name);
 
-        res.status(200).json({
-            assistantCategories: assistantCategories,
-            toolCategories: toolCategories,
-            assistants: assistants,
-            aiTools: tools
-        })
-    } catch (error) {
-        console.log("---error---", error)
-        res.status(500).json({ message: "Something went wrong", status: 500 })
-    }
-};
-
-exports.getCharactersV2 = async (req, res) => {
-    try {
+        // Step 2: Get all characters
         let [characters] = await sequelize.query(`
             SELECT 
                 id,
@@ -141,57 +192,52 @@ exports.getCharactersV2 = async (req, res) => {
             ORDER BY id ASC;
         `);
 
-        // --- REORDERING LOGIC FOR EXACT POSITIONING (Characters) ---
-        let positioned = characters.filter(a => a.position !== null).sort((a, b) => a.position - b.position);
-        let unpositioned = characters.filter(a => a.position === null);
-        let finalCharacters = new Array(characters.length).fill(null);
+        // Step 3: Group by category and apply exact positioning within each category
+        let groupedByCategory = groupBy(characters, 'category');
+        let finalCharacters = [];
 
-        positioned.forEach(item => {
-            const index = item.position - 1;
-            if (index >= 0 && index < finalCharacters.length && finalCharacters[index] === null) {
-                finalCharacters[index] = item;
-            } else {
-                unpositioned.push(item); 
+        sortedCategoryNames.forEach(catName => {
+            let catItems = groupedByCategory[catName] || [];
+            if (catItems.length > 0) {
+                // Separate positioned and unpositioned items
+                let positioned = catItems.filter(a => a.position !== null);
+                let unpositioned = catItems.filter(a => a.position === null);
+
+                // Create array with exact positions
+                let maxPos = positioned.length > 0 ? Math.max(...positioned.map(a => a.position)) : 0;
+                let finalCatArray = new Array(Math.max(maxPos, catItems.length)).fill(null);
+
+                // Place positioned items at exact spots
+
+                positioned.forEach(item => {
+                    const idx = item.position - 1;
+                    if (idx >= 0 && idx < finalCatArray.length) {
+                        finalCatArray[idx] = item;
+                    }
+                });
+
+                // Fill remaining spots with unpositioned items
+
+                let unposIdx = 0;
+                for (let i = 0; i < finalCatArray.length; i++) {
+                    if (finalCatArray[i] === null && unposIdx < unpositioned.length) {
+                        finalCatArray[i] = unpositioned[unposIdx];
+                        unposIdx++;
+                    }
+                }
+                // Add any remaining unpositioned items
+                while (unposIdx < unpositioned.length) {
+                    finalCatArray.push(unpositioned[unposIdx]);
+                    unposIdx++;
+                }
+
+                finalCharacters = finalCharacters.concat(finalCatArray.filter(a => a !== null));
             }
         });
 
-        let unposIdx = 0;
-        for (let i = 0; i < finalCharacters.length; i++) {
-            if (finalCharacters[i] === null) {
-                finalCharacters[i] = unpositioned[unposIdx];
-                unposIdx++;
-            }
-        }
-        characters = finalCharacters.filter(a => a !== null);
+        characters = finalCharacters;
 
-        // Query 2: Get categories with positioning
-        let [catRows] = await sequelize.query(`
-            SELECT name, position FROM categories WHERE isActive = 1 ORDER BY id ASC;
-        `);
-
-        // --- REORDERING LOGIC FOR EXACT POSITIONING (Categories) ---
-        let catPositioned = catRows.filter(c => c.position !== null).sort((a, b) => a.position - b.position);
-        let catUnpositioned = catRows.filter(c => c.position === null);
-        let finalCategories = new Array(catRows.length).fill(null);
-
-        catPositioned.forEach(item => {
-            const index = item.position - 1;
-            if (index >= 0 && index < finalCategories.length && finalCategories[index] === null) {
-                finalCategories[index] = item;
-            } else {
-                catUnpositioned.push(item);
-            }
-        });
-
-        let catIdx = 0;
-        for (let i = 0; i < finalCategories.length; i++) {
-            if (finalCategories[i] === null) {
-                finalCategories[i] = catUnpositioned[catIdx];
-                catIdx++;
-            }
-        }
-        const allCategories = finalCategories.filter(c => c !== null).map(c => c.name);
-        const characterCategories = allCategories.filter(cat => characters.some(a => a.category === cat));
+        const characterCategories = sortedCategoryNames.filter(cat => characters.some(a => a.category === cat));
 
         res.status(200).json({
             characterCategories: characterCategories,
