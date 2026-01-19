@@ -38,7 +38,8 @@ exports.mediaModelProvider = async (req, res) => {
 
 exports.mediaFeatureProvider = async (req, res) => {
     try {
-        let findAllMediaFeature = await AiMediaFeature.findAll({
+        let findAllMediaFeature = []
+        findAllMediaFeature = await AiMediaFeature.findAll({
             where: {
                 isActive: true,
             },
@@ -64,8 +65,25 @@ exports.mediaFeatureProvider = async (req, res) => {
         // Grouping logic matching old patterns if needed
         findAllMediaFeature = groupBy(findAllMediaFeature, "modelType");
 
+        
+         // Transform keys to camelCase for consistent API response format
+        const groupedFeatures = {};
+        Object.keys(findAllMediaFeature).forEach(key => {
+            // Convert "AI Video" → "aiVideo", "AI Images" → "aiImages", "AI Face Swap" → "aiFaceSwap"
+            const camelCaseKey = key
+                .split(' ')
+                .map((word, index) => {
+                    if (index === 0) {
+                        return word.toLowerCase();
+                    }
+                    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+                })
+                .join('');
+             groupedFeatures[camelCaseKey] = findAllMediaFeature[key];
+        });
+
         res.status(200).json({
-            data: findAllMediaFeature
+            data: groupedFeatures
         })
     } catch (error) {
         console.log("---error---", error)
