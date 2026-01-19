@@ -38,7 +38,8 @@ exports.mediaModelProvider = async (req, res) => {
 
 exports.mediaFeatureProvider = async (req, res) => {
     try {
-        let findAllMediaFeature = await AiMediaFeature.findAll({
+        let findAllMediaFeature = []
+        findAllMediaFeature = await AiMediaFeature.findAll({
             where: {
                 isActive: true,
             },
