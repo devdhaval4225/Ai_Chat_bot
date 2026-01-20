@@ -12,14 +12,14 @@ exports.mediaModelProvider = async (req, res) => {
                 'id',
                 'modelName',
                 'modelType',
-                'model',
+                // 'model',
                 'imageUrl',
                 'thumbnail',
                 'isPro',
                 'isActive',
-                'token',
-                'proToken',
-                'reduceToken'
+                // 'token',
+                // 'proToken',
+                // 'reduceToken'
             ],
             order: [['modelName', 'ASC']],
         });
