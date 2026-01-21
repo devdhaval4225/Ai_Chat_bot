@@ -4,6 +4,8 @@ const express = require("express");
 const cors = require("cors")
 const app = express();
 const cookiesParser = require("cookie-parser");
+const path = require("path");
+const fs = require("fs");
 
 const port = process.env.PORT || 8000;
 
@@ -17,6 +19,8 @@ app.use(express.urlencoded({extended: true}));
 const {apiLogger} = require("./middleware/apiLogs");
 app.use(apiLogger)
 
+app.use("/public", express.static(path.join(__dirname, "public")));
+
 const userRoutes = require("./routes/user.routes")
 const thirdPartyProvidor = require("./routes/thirdParty.routes");
 const subscription = require("./routes/subscription.routes");
@@ -29,6 +33,7 @@ app.use("/api/aiModel", require("./routes/aimodel.routes"));
 app.use("/api/media", require("./routes/media.routes"));
 app.use("/api/conversation", require("./routes/conversation.routes"));
 app.use("/api/admin", require("./routes/admin.routes"));
+app.use("/api/image", require("./routes/imagecreate.routes"));
 
 app.listen(port, () => {
     console.log(`Server Running At PORT : ${port}`);
