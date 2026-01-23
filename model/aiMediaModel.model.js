@@ -16,6 +16,10 @@ const AiMediaModel = sequelize.define('ai_media_models', {
     type: DataTypes.STRING,
     allowNull: true
   },
+  featuresType: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
   model: {
     type: DataTypes.STRING,
     allowNull: true

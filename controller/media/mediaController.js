@@ -12,6 +12,7 @@ exports.mediaModelProvider = async (req, res) => {
                 'id',
                 'modelName',
                 'modelType',
+                'featuresType',
                 // 'model',
                 'imageUrl',
                 'thumbnail',
@@ -22,10 +23,20 @@ exports.mediaModelProvider = async (req, res) => {
                 // 'reduceToken'
             ],
             order: [['modelName', 'ASC']],
+             raw: true
+        });
+
+        // Ensure backward compatibility: modelType should contain the category (aiVideo etc.)
+        const formattedModels = findAllMediaModel.map(item => {
+            return {
+                ...item,
+                modelType: item.featuresType || item.modelType || 'other'
+            };
         });
 
         res.status(200).json({
-            data: findAllMediaModel
+            // data: findAllMediaModel
+            data: formattedModels
         })
     } catch (error) {
         console.log("---error---", error)
@@ -38,8 +49,7 @@ exports.mediaModelProvider = async (req, res) => {
 
 exports.mediaFeatureProvider = async (req, res) => {
     try {
-        let findAllMediaFeature = []
-        findAllMediaFeature = await AiMediaFeature.findAll({
+        const findAllMediaFeature = await AiMediaFeature.findAll({
             where: {
                 isActive: true,
             },
@@ -48,6 +58,7 @@ exports.mediaFeatureProvider = async (req, res) => {
                 'hashId',
                 'name',
                 'modelType',
+                'featuresType',
                 'model',
                 'prompt',
                 'imageSource',
@@ -67,19 +78,23 @@ exports.mediaFeatureProvider = async (req, res) => {
 
         
          // Transform keys to camelCase for consistent API response format
+         // Map data: ensure modelType contains the category for app support
+        const formattedFeatures = findAllMediaFeature.map(item => {
+            const category = item.featuresType || item.modelType || 'other';
+            return {
+                ...item,
+                modelType: category 
+            };
+        });
+
+        // Grouping logic: group by the category name (e.g. aiVideo, aiImage)
         const groupedFeatures = {};
-        Object.keys(findAllMediaFeature).forEach(key => {
-            // Convert "AI Video" → "aiVideo", "AI Images" → "aiImages", "AI Face Swap" → "aiFaceSwap"
-            const camelCaseKey = key
-                .split(' ')
-                .map((word, index) => {
-                    if (index === 0) {
-                        return word.toLowerCase();
-                    }
-                    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-                })
-                .join('');
-             groupedFeatures[camelCaseKey] = findAllMediaFeature[key];
+         formattedFeatures.forEach(item => {
+            const key = item.modelType; 
+            if (!groupedFeatures[key]) {
+                groupedFeatures[key] = [];
+            }
+            groupedFeatures[key].push(item);
         });
 
         res.status(200).json({
