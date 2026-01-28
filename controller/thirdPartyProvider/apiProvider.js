@@ -166,16 +166,16 @@ exports.provider = async (req, res) => {
                     if (body && body.filedObj && contents) {
 
 
-                    for (const item of contents) {
-                        const checkStatus = await commonFunction.checkModeration(item.text);
-                        if (checkStatus) {
-                          return res.status(400).json({
-                            message: `A "${item.text}" might refer to content that is explicit, sexual, or involves descriptions of nudity. However, sharing or promoting such text is often inappropriate and may violate community guidelines, moral standards, and even laws in some cases.
+                        for (const item of contents) {
+                            const checkStatus = await commonFunction.checkModeration(item.text);
+                            if (checkStatus) {
+                                return res.status(400).json({
+                                    message: `A "${item.text}" might refer to content that is explicit, sexual, or involves descriptions of nudity. However, sharing or promoting such text is often inappropriate and may violate community guidelines, moral standards, and even laws in some cases.
 
 If you're using the term in a different context, could you please provide more details to help me better understand what you mean?`
-                          });
+                                });
+                            }
                         }
-                    }
                         const newContents = contents.map(obj => ({
                             ...obj,
                             content: obj.text,
@@ -261,11 +261,11 @@ If you're using the term in a different context, could you please provide more d
                     for (const item of contents) {
                         const checkStatus = await commonFunction.checkModeration(item.text);
                         if (checkStatus) {
-                          return res.status(400).json({
-                            message: `A "${item.text}" might refer to content that is explicit, sexual, or involves descriptions of nudity. However, sharing or promoting such text is often inappropriate and may violate community guidelines, moral standards, and even laws in some cases.
+                            return res.status(400).json({
+                                message: `A "${item.text}" might refer to content that is explicit, sexual, or involves descriptions of nudity. However, sharing or promoting such text is often inappropriate and may violate community guidelines, moral standards, and even laws in some cases.
 
 If you're using the term in a different context, could you please provide more details to help me better understand what you mean?`
-                          });
+                            });
                         }
                     }
 
@@ -346,11 +346,11 @@ If you're using the term in a different context, could you please provide more d
                     for (const item of contents) {
                         const checkStatus = await commonFunction.checkModeration(item.text);
                         if (checkStatus) {
-                          return res.status(400).json({
-                            message: `A "${item.text}" might refer to content that is explicit, sexual, or involves descriptions of nudity. However, sharing or promoting such text is often inappropriate and may violate community guidelines, moral standards, and even laws in some cases.
+                            return res.status(400).json({
+                                message: `A "${item.text}" might refer to content that is explicit, sexual, or involves descriptions of nudity. However, sharing or promoting such text is often inappropriate and may violate community guidelines, moral standards, and even laws in some cases.
 
 If you're using the term in a different context, could you please provide more details to help me better understand what you mean?`
-                          });
+                            });
                         }
                     }
                     const createNewArray = contents.map(item => ({
@@ -431,6 +431,12 @@ If you're using the term in a different context, could you please provide more d
 
                 if (apiType === "chatCompletion") {
 
+                    if (reminToken == 0) {
+                        res.status(400).json({
+                            message: "Your Quota is Over"
+                        })
+                    }
+
                     if (!body.filedObj.threadId) {
                         await reduceToken(deviceId, uniqueId, apiProvider, apiType, true)
                     }
@@ -438,11 +444,11 @@ If you're using the term in a different context, could you please provide more d
                     for (const item of contents) {
                         const checkStatus = await commonFunction.checkModeration(item.text);
                         if (checkStatus) {
-                          return res.status(400).json({
-                            message: `A "${item.text}" might refer to content that is explicit, sexual, or involves descriptions of nudity. However, sharing or promoting such text is often inappropriate and may violate community guidelines, moral standards, and even laws in some cases.
+                            return res.status(400).json({
+                                message: `A "${item.text}" might refer to content that is explicit, sexual, or involves descriptions of nudity. However, sharing or promoting such text is often inappropriate and may violate community guidelines, moral standards, and even laws in some cases.
 
 If you're using the term in a different context, could you please provide more details to help me better understand what you mean?`
-                          });
+                            });
                         }
                     }
 
@@ -485,7 +491,7 @@ If you're using the term in a different context, could you please provide more d
                             data: resChatCompletions
                         })
                     } catch (error) {
-                        console.log("--error---", error)
+                        console.log("--error---", error.response.data.error.message)
                         res.status(400).json({
                             message: error.response.data.message,
                         })
