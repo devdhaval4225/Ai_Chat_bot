@@ -20,6 +20,10 @@ const AiMediaFeature = sequelize.define('ai_media_features', {
     type: DataTypes.STRING,
     allowNull: true
   },
+   featuresType: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
   model: {
     type: DataTypes.STRING,
     allowNull: true
