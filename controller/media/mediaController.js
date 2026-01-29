@@ -1,5 +1,6 @@
 const AiMediaModel = require("../../model/aiMediaModel.model");
 const AiMediaFeature = require("../../model/aiMediaFeature.model");
+const Resolution = require("../../model/resolution.model");
 const { groupBy } = require("lodash");
 
 exports.mediaModelProvider = async (req, res) => {
@@ -13,24 +14,45 @@ exports.mediaModelProvider = async (req, res) => {
                 'modelName',
                 'modelType',
                 'featuresType',
-                // 'model',
                 'imageUrl',
                 'thumbnail',
                 'isPro',
                 'isActive',
-                // 'token',
-                // 'proToken',
-                // 'reduceToken'
+                'resolutions'
             ],
             order: [['modelName', 'ASC']],
-             raw: true
         });
 
         // Ensure backward compatibility: modelType should contain the category (aiVideo etc.)
         const formattedModels = findAllMediaModel.map(item => {
+            const model = item.toJSON();
+
+            
+            // Handle resolutions: Parse if string and transform keys
+            let rawResolutions = model.resolutions || [];
+            if (typeof rawResolutions === 'string') {
+                try {
+                    rawResolutions = JSON.parse(rawResolutions);
+                } catch (e) {
+                    rawResolutions = [];
+                }
+            }
+
+            const transformedResolutions = Array.isArray(rawResolutions) ? rawResolutions.map(res => ({
+                Button_name: res.Button_name || res.label || "",
+                type: res.type || res.value || ""
+            })) : [];
+
             return {
-                ...item,
-                modelType: item.featuresType || item.modelType || 'other'
+                id: model.id,
+                modelName: model.modelName,
+                modelType: model.modelType,
+                featuresType: model.featuresType,
+                imageUrl: model.imageUrl,
+                thumbnail: model.thumbnail,
+                isPro: model.isPro,
+                isActive: model.isActive,
+                resolutions: transformedResolutions
             };
         });
 

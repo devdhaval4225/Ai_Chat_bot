@@ -54,6 +54,10 @@ const AiMediaModel = sequelize.define('ai_media_models', {
     type: DataTypes.INTEGER,
     allowNull: false,
     defaultValue: 1
+  },
+    resolutions: {
+    type: DataTypes.JSON,
+    allowNull: true
   }
 }, {
   tableName: 'ai_media_models',
@@ -61,5 +65,10 @@ const AiMediaModel = sequelize.define('ai_media_models', {
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 });
+
+const Resolution = require('./resolution.model');
+
+AiMediaModel.belongsTo(Resolution, { foreignKey: 'resolution_id', as: 'resolution' });
+Resolution.hasMany(AiMediaModel, { foreignKey: 'resolution_id' });
 
 module.exports = AiMediaModel;

@@ -2,19 +2,23 @@
 
 module.exports = {
   async up(queryInterface, Sequelize) {
-    // 1. Add featuresType to ai_media_models
-    await queryInterface.addColumn('ai_media_models', 'featuresType', {
-      type: Sequelize.STRING,
-      allowNull: true,
-      after: 'modelType'
-    });
+    const tableModels = await queryInterface.describeTable('ai_media_models');
+    if (!tableModels.featuresType) {
+      await queryInterface.addColumn('ai_media_models', 'featuresType', {
+        type: Sequelize.STRING,
+        allowNull: true,
+        after: 'modelType'
+      });
+    }
 
-    // 2. Add featuresType to ai_media_features
-    await queryInterface.addColumn('ai_media_features', 'featuresType', {
-      type: Sequelize.STRING,
-      allowNull: true,
-      after: 'modelType'
-    });
+    const tableFeatures = await queryInterface.describeTable('ai_media_features');
+    if (!tableFeatures.featuresType) {
+      await queryInterface.addColumn('ai_media_features', 'featuresType', {
+        type: Sequelize.STRING,
+        allowNull: true,
+        after: 'modelType'
+      });
+    }
 
     // 3. Data Migration: featuresType = modelType, modelType = null
     // Models Table
