@@ -1,6 +1,5 @@
 const AiMediaModel = require("../../model/aiMediaModel.model");
 const AiMediaFeature = require("../../model/aiMediaFeature.model");
-const Resolution = require("../../model/resolution.model");
 const { groupBy } = require("lodash");
 
 exports.mediaModelProvider = async (req, res) => {
@@ -95,12 +94,8 @@ exports.mediaFeatureProvider = async (req, res) => {
             raw: true
         });
 
-        // Grouping logic matching old patterns if needed
-        findAllMediaFeature = groupBy(findAllMediaFeature, "modelType");
-
-        
-         // Transform keys to camelCase for consistent API response format
-         // Map data: ensure modelType contains the category for app support
+        // Transform keys to camelCase for consistent API response format
+        // Map data: ensure modelType contains the category for app support
         const formattedFeatures = findAllMediaFeature.map(item => {
             const category = item.featuresType || item.modelType || 'other';
             return {
@@ -111,7 +106,7 @@ exports.mediaFeatureProvider = async (req, res) => {
 
         // Grouping logic: group by the category name (e.g. aiVideo, aiImage)
         const groupedFeatures = {};
-         formattedFeatures.forEach(item => {
+        formattedFeatures.forEach(item => {
             const key = item.modelType; 
             if (!groupedFeatures[key]) {
                 groupedFeatures[key] = [];
