@@ -16,6 +16,10 @@ const AiMediaModel = sequelize.define('ai_media_models', {
     type: DataTypes.STRING,
     allowNull: true
   },
+  featuresType: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
   model: {
     type: DataTypes.STRING,
     allowNull: true
@@ -50,6 +54,10 @@ const AiMediaModel = sequelize.define('ai_media_models', {
     type: DataTypes.INTEGER,
     allowNull: false,
     defaultValue: 1
+  },
+    resolutions: {
+    type: DataTypes.JSON,
+    allowNull: true
   }
 }, {
   tableName: 'ai_media_models',
@@ -57,5 +65,6 @@ const AiMediaModel = sequelize.define('ai_media_models', {
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 });
+
 
 module.exports = AiMediaModel;

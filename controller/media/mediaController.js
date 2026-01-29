@@ -12,20 +12,52 @@ exports.mediaModelProvider = async (req, res) => {
                 'id',
                 'modelName',
                 'modelType',
-                // 'model',
+                'featuresType',
                 'imageUrl',
                 'thumbnail',
                 'isPro',
                 'isActive',
-                // 'token',
-                // 'proToken',
-                // 'reduceToken'
+                'resolutions'
             ],
             order: [['modelName', 'ASC']],
         });
 
+        // Ensure backward compatibility: modelType should contain the category (aiVideo etc.)
+        const formattedModels = findAllMediaModel.map(item => {
+            const model = item.toJSON();
+
+            
+            // Handle resolutions: Parse if string and transform keys
+            let rawResolutions = model.resolutions || [];
+            if (typeof rawResolutions === 'string') {
+                try {
+                    rawResolutions = JSON.parse(rawResolutions);
+                } catch (e) {
+                    rawResolutions = [];
+                }
+            }
+
+            const transformedResolutions = Array.isArray(rawResolutions) ? rawResolutions.map(res => ({
+                Button_name: res.Button_name || res.label || "",
+                type: res.type || res.value || ""
+            })) : [];
+
+            return {
+                id: model.id,
+                modelName: model.modelName,
+                modelType: model.modelType,
+                featuresType: model.featuresType,
+                imageUrl: model.imageUrl,
+                thumbnail: model.thumbnail,
+                isPro: model.isPro,
+                isActive: model.isActive,
+                resolutions: transformedResolutions
+            };
+        });
+
         res.status(200).json({
-            data: findAllMediaModel
+            // data: findAllMediaModel
+            data: formattedModels
         })
     } catch (error) {
         console.log("---error---", error)
@@ -38,8 +70,7 @@ exports.mediaModelProvider = async (req, res) => {
 
 exports.mediaFeatureProvider = async (req, res) => {
     try {
-        let findAllMediaFeature = []
-        findAllMediaFeature = await AiMediaFeature.findAll({
+        const findAllMediaFeature = await AiMediaFeature.findAll({
             where: {
                 isActive: true,
             },
@@ -48,6 +79,7 @@ exports.mediaFeatureProvider = async (req, res) => {
                 'hashId',
                 'name',
                 'modelType',
+                'featuresType',
                 'model',
                 'prompt',
                 'imageSource',
@@ -62,24 +94,24 @@ exports.mediaFeatureProvider = async (req, res) => {
             raw: true
         });
 
-        // Grouping logic matching old patterns if needed
-        findAllMediaFeature = groupBy(findAllMediaFeature, "modelType");
+        // Transform keys to camelCase for consistent API response format
+        // Map data: ensure modelType contains the category for app support
+        const formattedFeatures = findAllMediaFeature.map(item => {
+            const category = item.featuresType || item.modelType || 'other';
+            return {
+                ...item,
+                modelType: category 
+            };
+        });
 
-        
-         // Transform keys to camelCase for consistent API response format
+        // Grouping logic: group by the category name (e.g. aiVideo, aiImage)
         const groupedFeatures = {};
-        Object.keys(findAllMediaFeature).forEach(key => {
-            // Convert "AI Video" → "aiVideo", "AI Images" → "aiImages", "AI Face Swap" → "aiFaceSwap"
-            const camelCaseKey = key
-                .split(' ')
-                .map((word, index) => {
-                    if (index === 0) {
-                        return word.toLowerCase();
-                    }
-                    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-                })
-                .join('');
-             groupedFeatures[camelCaseKey] = findAllMediaFeature[key];
+        formattedFeatures.forEach(item => {
+            const key = item.modelType; 
+            if (!groupedFeatures[key]) {
+                groupedFeatures[key] = [];
+            }
+            groupedFeatures[key].push(item);
         });
 
         res.status(200).json({
