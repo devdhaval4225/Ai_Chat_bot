@@ -34,6 +34,7 @@ app.use("/api/media", require("./routes/media.routes"));
 app.use("/api/conversation", require("./routes/conversation.routes"));
 app.use("/api/admin", require("./routes/admin.routes"));
 app.use("/api/image", require("./routes/imagecreate.routes"));
+app.use("/api/video", require("./routes/videocreate.routes"));
 
 app.listen(port, () => {
     console.log(`Server Running At PORT : ${port}`);

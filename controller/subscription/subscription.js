@@ -4,11 +4,13 @@ const History = require("../../model/tokenhistory.model");
 const Subscription = require("../../model/subscription.model");
 const { Op, literal } = require('sequelize');
 const moment = require("moment");
+const PremiunPlanHistory = require("../../model/premiumPlanHistory");
 
 
 exports.planSubscribe = async (req, res) => {
     try {
         const { deviceId, planId, isDown } = req.body;
+        const body = req.body;
         await User.hasOne(Plan, {
             foreignKey: 'planSlug',
             sourceKey: 'planType',
@@ -80,6 +82,20 @@ exports.planSubscribe = async (req, res) => {
                         newPlanToken: findPlan.token,
                         isUpDown: "up",
                         newRefreshToken: findUserDetails.reminToken + findPlan.token
+                    })
+
+                    // Create Premiun Plan History
+                    await PremiunPlanHistory.create({
+                        purchaseToken: body.purchaseToken,
+                        productId: body.productId,
+                        userId: body.userId || deviceId,
+                        timestamp: new Date(),
+                        countryCode: body.countryCode,
+                        transactionId: body.transactionId,
+                        purchaseState: body.purchaseState,
+                        userAgent: body.userAgent,
+                        subscriptionType: body.subscriptionType,
+                        promoCode: body.promoCode
                     })
 
                     // Create History 
