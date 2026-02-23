@@ -47,13 +47,14 @@ exports.imageCreateProvider = async (req, res) => {
                 try {
                     if (messObj.isBuffer && messObj.isBuffer == true) {
 
-                        const messArr = messObj.obj.filter((v) => v.type == "input_text").map((v) => v.text)
+                        let messArr = messObj.obj.filter((v) => v.type == "input_text").map((v) => v.text)
+                        messArr = messArr.length > 0  ? messArr.join(",") : "build image"
                         const FormData = require("form-data");
                         const form = new FormData();
                         form.append("model", model);
-                        form.append("prompt", messArr.join(","));
+                        form.append("prompt", messArr);
                         if (body && body.size) { form.append("size", size) }
-                        if (body && body.quality) { form.append("quality", quality) }
+                        // if (body && body.quality) { form.append("quality", quality) }
 
                         const imageArr = messObj.obj.filter((v) => v.type == "input_image")
                         if (imageArr.length > 0) {
